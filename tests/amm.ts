@@ -6,7 +6,6 @@ import { getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount } from
 
 
 import {
-  createMint,
   createAssociatedTokenAccount,
   mintTo,
   getAccount,
@@ -18,11 +17,12 @@ import {
   AmmClient,
   PriceMath,
   getAmmLpMintAddr,
-} from "../sdk/dist";
+} from "../sdk/src";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { expectError, fastForward } from "./utils/utils";
 import { MAINNET_USDC as USDC } from "@metadaoproject/futarchy";
+import { createMint } from "../sdk/src";
 const META_DECIMALS = 6;
 const USDC_DECIMALS = 6;
 
@@ -51,12 +51,13 @@ describe("amm", async function () {
 
   beforeEach(async function () {
     
-    let userUsdcAccount = await getOrCreateAssociatedTokenAccount(
-      connection,
-      payer,
+    let userUsdcAccount = await getAssociatedTokenAddressSync(
       USDC,
-      payer.publicKey
+      payer.publicKey,
+      true,
+    
     );
+    console.log(userUsdcAccount)
       const mkp = Keypair.generate()
     var  [amm, bump] = getAmmAddr(
       ammClient.program.programId,
@@ -72,16 +73,35 @@ describe("amm", async function () {
       META_DECIMALS,
       mkp,
       {
-        skipPreflight: true
+        skipPreflight: false
       }
     )
-     getOrCreateAssociatedTokenAccount(
+  getOrCreateAssociatedTokenAccount(
       connection,
       payer,
       META,
-      payer.publicKey
-    );
+      payer.publicKey,
+      true,
 
+      "recent",
+      {
+        skipPreflight: false
+      }
+    );
+ const qata =   await getAssociatedTokenAddressSync(
+
+     USDC,
+     amm,
+     true)
+   console.log(qata)
+
+const bata = await  getAssociatedTokenAddressSync(
+    META,
+    amm,
+    true,
+  );
+  
+console.log(bata)
     proposal = Keypair.generate().publicKey;
     amm = await ammClient
     .createAmm(
@@ -92,7 +112,10 @@ describe("amm", async function () {
       
       "p",
       "http://google.com",
-      1
+      1,
+      bata,
+      qata
+
     );
   });
 

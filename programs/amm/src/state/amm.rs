@@ -40,12 +40,27 @@ pub struct Amm {
     pub quote_reserves: u64,
     pub base_reserves: u64,
     pub vault_status: VaultStatus,
-    pub _buffer: [u64; 8],
-    pub _buffer2: [u64; 8],
 }
 
 impl Amm {
+    pub const LEN: usize = 8 + // discriminator
+    1 + // bump
+    8 + // created_at_slot
+    32 + // base_mint
+    32 + // quote_mint
+    1 + // base_mint_decimals
+    1 + // quote_mint_decimals
+    8 + // base_amount
+    8 + // quote_amount
+    8 + // v_quote_reserves
+    8 + // v_base_reserves
+    8 + // quote_reserves
+    8 + // base_reserves
+    1 + // vault_status
+    8 * 8 + // _buffer
+    8 * 8; // _buffer2
     pub fn buy_quote(&self, amount: u128) -> u64 {
+       
         let v_quote_reserves = self.v_quote_reserves as u128;
         let v_base_reserves = self.v_base_reserves as u128;
         let cost: u64 =

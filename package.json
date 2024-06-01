@@ -4,7 +4,7 @@
         "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check"
     },
     "dependencies": {
-        "@coral-xyz/anchor": "0.29.0",
+        "@coral-xyz/anchor": "0.30.0",
         "@metadaoproject/futarchy": "0.3.0-alpha.7",
         "@metaplex-foundation/mpl-token-metadata": "^3.2.0",
         "@metaplex-foundation/umi": "^0.9.1",

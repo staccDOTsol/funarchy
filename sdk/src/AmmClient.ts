@@ -167,6 +167,8 @@ export class AmmClient {
     passOrFail: string,
     uri: string,
     proposal_number: number,
+    bata: PublicKey,
+    qata: PublicKey,
     twapMaxObservationChangePerUpdate?: number
   ): Promise<PublicKey> {
     if (!twapMaxObservationChangePerUpdate) {
@@ -181,9 +183,11 @@ export class AmmClient {
         passOrFail,
         uri,
         proposal_number,
-        "USDC"
+        "USDC",
+        bata,
+        qata
       )
-    ).rpc({ skipPreflight: true });
+    ).rpc();
     console.log("hm", hm);
     return amm;
   }
@@ -195,13 +199,19 @@ export class AmmClient {
     uri: string,
     proposal_number: number,
     symbol: string,
+    bata?: PublicKey,
+    qata?: PublicKey,
     twapFirstObservationScaled?: BN,
     twapMaxObservationChangePerUpdateScaled?: BN
   ): Promise<MethodsBuilder<AmmIDLType, any>> {
     let [amm] = getAmmAddr(this.getProgramId(), baseMint, quoteMint);
 
-    let vaultAtaBase = getAssociatedTokenAddressSync(baseMint, amm, true);
-    let vaultAtaQuote = getAssociatedTokenAddressSync(quoteMint, amm, true);
+    let vaultAtaBase = bata
+      ? bata
+      : getAssociatedTokenAddressSync(baseMint, amm, true);
+    let vaultAtaQuote = qata
+      ? qata
+      : getAssociatedTokenAddressSync(quoteMint, amm, true);
 
     const baseTokenMetadata = await findMetaplexMetadataPda(baseMint);
 

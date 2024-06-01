@@ -118,13 +118,13 @@ impl Swap<'_> {
             amm.swap(input_amount, swap_type)?
         };
 
-        let seeds =  &[
-            crate::AMM_SEED_PREFIX,
-            &accounts.base_mint.key().to_bytes(),
-            &accounts.quote_mint.key().to_bytes(),
-            &[accounts.amm.bump],
-        ];  
         
+        let signer_seeds = &[
+            crate::AMM_SEED_PREFIX,
+            &accounts.base_mint.to_account_info().key.as_ref(),
+            &accounts.quote_mint.to_account_info().key.as_ref(),
+            &[accounts.amm.bump],
+        ];
         let (user_from, vault_to, vault_from, user_to) = match swap_type {
             SwapType::Buy => (
                 accounts.user_quote_account.clone(),
@@ -153,7 +153,7 @@ impl Swap<'_> {
                                 mint: accounts.base_mint.to_account_info(),
                                 authority: accounts.amm.to_account_info(),
                             },
-                            &[seeds],
+                            &[signer_seeds],
                         ),
                         1_000_000_000_i32.pow(accounts.base_mint.decimals as u32) as u64,
                     )?;
@@ -219,7 +219,7 @@ impl Swap<'_> {
                             0,
                         
 
-                    )?;
+                    ).unwrap();
                 }
             { 
                 let amm = &mut accounts.amm;
@@ -250,7 +250,7 @@ impl Swap<'_> {
                             mint: accounts.base_mint.to_account_info(),
                             authority: accounts.amm.to_account_info(),
                         },
-                        &[seeds],
+                        &[signer_seeds],
                     ),
                     output_amount,
                 )?;
@@ -271,8 +271,8 @@ impl Swap<'_> {
                             to: user_to.to_account_info(),
                             authority: accounts.amm.to_account_info(),
                         },
-                        &[seeds],
-                    ),
+
+                        &[signer_seeds],                    ),
                     output_amount,
                 )?;
 
@@ -284,7 +284,8 @@ impl Swap<'_> {
                             mint: accounts.base_mint.to_account_info(),
                             authority: accounts.amm.to_account_info(),
                         },
-                        &[seeds],
+                        
+                        &[signer_seeds],
                     ),
                     input_amount,
                 )?;

@@ -32,8 +32,8 @@ where `P_URI` and `F_URI` are replaced with their respective values.
 
 | program           | tag  | program ID                                   |
 | ----------------- | ---- | -------------------------------------------- |
-| autocrat          | v0.3 | CfnLemDrSXwyQyT5ecGFDekN7JSqAcpBY8PvCXVkKdLm  |
-| amm               | v0.3 | 99ghypT4Bgr3cxvUgLvDrcq818oiBS62P2Qbkq7osAuV |
+| autocrat          | v0.3 | J7MpMtBj4WVNJ7MQxFj8owfjXAe7BmmdoGgMuh8xMuMU  |
+| amm               | v0.3 | GQFQqovdVdjmCCj5KoTsuurJU6cqg5PZ7kwihb2mvPoo |
 | conditional_vault | v0.3 | VAU1T7S5UuEHmMvXtXMVmpEoQtZ2ya7eRb7gcN47wDp  |
 | autocrat_v0       | v0.2 | metaRK9dUBnrAdZN6uUDKvxBVKW5pyCbPVmLtUZwtBp  |
 | autocrat_migrator | v0.2 | MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt  |

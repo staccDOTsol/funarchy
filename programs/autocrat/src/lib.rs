@@ -25,7 +25,7 @@
 //!   instruction by calling `execute_proposal`.
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
+use anchor_spl::token::Mint;
 
 pub mod error;
 pub mod instructions;
@@ -54,7 +54,7 @@ security_txt! {
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
 
-declare_id!("CfnLemDrSXwyQyT5ecGFDekN7JSqAcpBY8PvCXVkKdLm");
+declare_id!("J7MpMtBj4WVNJ7MQxFj8owfjXAe7BmmdoGgMuh8xMuMU");
 
 pub const SLOTS_PER_10_SECS: u64 = 25;
 pub const THREE_DAYS_IN_SLOTS: u64 = 24 * 60 * 6 * SLOTS_PER_10_SECS;

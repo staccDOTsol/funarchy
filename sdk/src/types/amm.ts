@@ -273,18 +273,6 @@ export type Amm = {
             type: {
               defined: "VaultStatus";
             };
-          },
-          {
-            name: "buffer";
-            type: {
-              array: ["u64", 8];
-            };
-          },
-          {
-            name: "buffer2";
-            type: {
-              array: ["u64", 8];
-            };
           }
         ];
       };
@@ -728,18 +716,6 @@ export const IDL: Amm = {
             name: "vaultStatus",
             type: {
               defined: "VaultStatus",
-            },
-          },
-          {
-            name: "buffer",
-            type: {
-              array: ["u64", 8],
-            },
-          },
-          {
-            name: "buffer2",
-            type: {
-              array: ["u64", 8],
             },
           },
         ],

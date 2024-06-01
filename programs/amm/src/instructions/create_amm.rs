@@ -3,11 +3,10 @@ use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::*;
 use anchor_spl::metadata::{
     create_metadata_accounts_v3, mpl_token_metadata::types::DataV2, CreateMetadataAccountsV3,
-    Metadata, MetadataAccount,
+    Metadata
 };
 use crate::error::AmmError;
-use crate::{generate_amm_seeds, state::*};
-
+use crate::state::*;
 
 #[derive(Accounts)]
 pub struct CreateAmm<'info> {
@@ -16,7 +15,7 @@ pub struct CreateAmm<'info> {
     #[account(
         init,
         payer = user,
-        space = 8 + std::mem::size_of::<Amm>() ,
+        space = 8 + Amm::LEN,
         seeds = [
             AMM_SEED_PREFIX,
             base_mint.key().as_ref(),
@@ -81,12 +80,21 @@ impl CreateAmm<'_> {
 
         let current_slot = Clock::get()?.slot;
 
+        amm.reload()?;
+
         // there are null bytes we must trim from string, otherwise string value is longer than we want
         let quote_token_symbol_raw = osymbol.clone();
         let quote_token_symbol = quote_token_symbol_raw.trim_matches(char::from(0));
 
         let base_symbol = format!("{}{}", pof, quote_token_symbol);
-        let seeds = generate_amm_seeds!(amm);
+       
+        let signer_seeds = &[
+            AMM_SEED_PREFIX,
+            &base_mint.to_account_info().key.as_ref(),
+            &quote_mint.to_account_info().key.as_ref(),
+            &[amm.bump],
+        ];
+
         for (symbol, uri, metadata, mint) in [
             (
                 base_symbol,
@@ -108,7 +116,8 @@ impl CreateAmm<'_> {
             };
 
             create_metadata_accounts_v3(
-                CpiContext::new(cpi_program, cpi_accounts).with_signer(&[seeds]),
+                CpiContext::new(cpi_program, cpi_accounts).with_signer(
+                    &[signer_seeds]),
                 DataV2 {
                     name: format!("Proposal {}: {}", proposal_number, symbol),
                     symbol,
@@ -131,7 +140,7 @@ impl CreateAmm<'_> {
                     mint: base_mint.to_account_info(),
                     authority: amm.to_account_info(),
                 },
-                &[seeds],
+                &[signer_seeds],
             ),
             1_000_000_000_i32.pow(base_mint.decimals as u32) as u64,
         )?;
@@ -154,8 +163,6 @@ impl CreateAmm<'_> {
             base_reserves: 1_000_000_000_u128.pow(base_mint.decimals as u32) as u64,
             quote_reserves: 0,
             vault_status: VaultStatus::Active,
-            _buffer: [0; 8],
-            _buffer2: [0; 8],
         });
 
         Ok(())
