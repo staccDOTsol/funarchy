@@ -2,12 +2,15 @@ import { AnchorProvider, IdlTypes, Program, utils } from "@coral-xyz/anchor";
 import {
   AddressLookupTableAccount,
   ComputeBudgetProgram,
+  ConfirmOptions,
   Connection,
   Keypair,
   PublicKey,
   SYSVAR_RENT_PUBKEY,
+  Signer,
   SystemProgram,
   Transaction,
+  sendAndConfirmTransaction,
 } from "@solana/web3.js";
 
 import { Amm as AmmIDLType, IDL as AmmIDL } from "./types/amm";
@@ -24,15 +27,57 @@ import {
   createAssociatedTokenAccountIdempotentInstruction,
   TOKEN_PROGRAM_ID,
   ASSOCIATED_TOKEN_PROGRAM_ID,
+  getMinimumBalanceForRentExemptMint,
+  MINT_SIZE,
+  createInitializeMint2Instruction,
 } from "@solana/spl-token";
 import { PriceMath } from "./utils/priceMath";
 import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
+export async function createMint(
+  connection: Connection,
+  payer: Signer,
+  mintAuthority: PublicKey,
+  freezeAuthority: PublicKey | null,
+  decimals: number,
+  keypair = Keypair.generate(),
+  confirmOptions?: ConfirmOptions,
+  programId = TOKEN_PROGRAM_ID
+): Promise<PublicKey> {
+  const lamports = await getMinimumBalanceForRentExemptMint(connection);
+
+  const transaction = new Transaction().add(
+    ComputeBudgetProgram.setComputeUnitPrice({
+      microLamports: 138666,
+    }),
+    SystemProgram.createAccount({
+      fromPubkey: payer.publicKey,
+      newAccountPubkey: keypair.publicKey,
+      space: MINT_SIZE,
+      lamports,
+      programId,
+    }),
+    createInitializeMint2Instruction(
+      keypair.publicKey,
+      decimals,
+      mintAuthority,
+      freezeAuthority,
+      programId
+    )
+  );
+
+  await sendAndConfirmTransaction(
+    connection,
+    transaction,
+    [payer, keypair],
+    confirmOptions
+  );
+
+  return keypair.publicKey;
+}
+
 export type SwapType = LowercaseKeys<IdlTypes<AmmIDLType>["SwapType"]>;
-import {
-  Key,
-  MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
-} from "@metaplex-foundation/mpl-token-metadata";
+import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
 import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
@@ -138,33 +183,7 @@ export class AmmClient {
         proposal_number,
         "USDC"
       )
-    ).instruction();
-    const tx = new Transaction().add(hm);
-    tx.feePayer = this.provider.publicKey;
-    tx.recentBlockhash = (
-      await new Connection(
-        process.env.ANCHOR_PROVIDER as string,
-        "confirmed"
-      ).getLatestBlockhash()
-    ).blockhash;
-    tx.sign(
-      Keypair.fromSecretKey(
-        new Uint8Array(
-          JSON.parse(
-            require("fs").readFileSync(
-              process.env.ANCHOR_WALLET as string,
-              "utf-8"
-            )
-          )
-        )
-      )
-    );
-    await new Connection(
-      process.env.ANCHOR_PROVIDER as string,
-      "confirmed"
-    ).sendRawTransaction(
-      tx.serialize({ requireAllSignatures: false, verifySignatures: false })
-    );
+    ).rpc({ skipPreflight: true });
     console.log("hm", hm);
     return amm;
   }
@@ -191,7 +210,7 @@ export class AmmClient {
 
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitPrice({
-          microLamports: 138666,
+          microLamports: 66600,
         }),
       ])
       .accounts({
@@ -203,7 +222,7 @@ export class AmmClient {
         vaultAtaQuote,
         systemProgram: SystemProgram.programId,
         associatedTokenProgram: new PublicKey(
-          "TokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+          "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         ),
         tokenProgram: TOKEN_PROGRAM_ID,
         baseTokenMetadata: baseTokenMetadata,
@@ -332,7 +351,7 @@ export class AmmClient {
       })
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitPrice({
-          microLamports: 138666,
+          microLamports: 66600,
         }),
       ])
       .accounts({
@@ -390,6 +409,12 @@ export class AmmClient {
   // }
 
   async getAmm(amm: PublicKey): Promise<AmmAccount> {
+    console.log("Fetching Amm account at address:", amm.toBase58());
+    const accountInfo = await this.provider.connection.getAccountInfo(amm);
+    if (!accountInfo) {
+      throw new Error("Account not found");
+    }
+    console.log("Account data:", accountInfo.data);
     return await this.program.account.amm.fetch(amm);
   }
 
