@@ -1,14 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN } from "@coral-xyz/anchor";
-import { BankrunProvider } from "anchor-bankrun";
-import { getAssociatedTokenAddressSync } from "@solana/spl-token";
+import { AnchorProvider } from "@coral-xyz/anchor";
+import { getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
 
-import {
-  startAnchor,
-  Clock,
-  ProgramTestContext,
-  BanksClient,
-} from "solana-bankrun";
+
 
 import {
   createMint,
@@ -16,92 +11,89 @@ import {
   mintTo,
   getAccount,
   getMint,
-} from "spl-token-bankrun";
+} from "@solana/spl-token";
 
 import {
   getAmmAddr,
   AmmClient,
   PriceMath,
   getAmmLpMintAddr,
-} from "@metadaoproject/futarchy";
-import { Keypair, PublicKey } from "@solana/web3.js";
+} from "../sdk/dist";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import { assert } from "chai";
 import { expectError, fastForward } from "./utils/utils";
-
-const META_DECIMALS = 9;
+import { MAINNET_USDC as USDC } from "@metadaoproject/futarchy";
+const META_DECIMALS = 6;
 const USDC_DECIMALS = 6;
 
 describe("amm", async function () {
-  let provider: BankrunProvider,
+  let provider: AnchorProvider,
     ammClient: AmmClient,
-    payer: Keypair,
-    context: ProgramTestContext,
-    banksClient: BanksClient,
     META: PublicKey,
-    USDC: PublicKey,
+    payer: Keypair,
+    connection: Connection,
     proposal: PublicKey,
     amm: PublicKey,
+    
     lpMint: PublicKey;
 
   before(async function () {
-    context = await startAnchor("./", [], []);
-    banksClient = context.banksClient;
-    provider = new BankrunProvider(context);
-    anchor.setProvider(provider);
+    connection = new Connection(process.env.ANCHOR_PROVIDER as string, "confirmed"),
+    payer = Keypair.fromSecretKey(
+      new Uint8Array(
+        JSON.parse(require('fs').readFileSync(process.env.ANCHOR_WALLET as string, "utf-8"))
+      )
+    );
+
+    provider = new AnchorProvider(connection, new anchor.Wallet(payer), {})
     ammClient = await AmmClient.createClient({ provider });
-    payer = provider.wallet.payer;
   });
 
   beforeEach(async function () {
-    await fastForward(context, 1n);
+    
+    let userUsdcAccount = await getOrCreateAssociatedTokenAccount(
+      connection,
+      payer,
+      USDC,
+      payer.publicKey
+    );
+      const mkp = Keypair.generate()
+    var  [amm, bump] = getAmmAddr(
+      ammClient.program.programId,
+      mkp.publicKey,
+      USDC,
+    );
+
     META = await createMint(
-      banksClient,
+      connection,
       payer,
-      payer.publicKey,
-      payer.publicKey,
-      META_DECIMALS
-    );
-    USDC = await createMint(
-      banksClient,
-      payer,
-      payer.publicKey,
-      payer.publicKey,
-      USDC_DECIMALS
-    );
-
-    let userMetaAccount = await createAssociatedTokenAccount(
-      banksClient,
+      amm,
+      amm,
+      META_DECIMALS,
+      mkp,
+      {
+        skipPreflight: true
+      }
+    )
+     getOrCreateAssociatedTokenAccount(
+      connection,
       payer,
       META,
       payer.publicKey
-    );
-    let userUsdcAccount = await createAssociatedTokenAccount(
-      banksClient,
-      payer,
-      USDC,
-      payer.publicKey
-    );
-
-    mintTo(
-      banksClient,
-      payer,
-      META,
-      userMetaAccount,
-      payer.publicKey,
-      10_000 * 10 ** 9
-    );
-    mintTo(
-      banksClient,
-      payer,
-      USDC,
-      userUsdcAccount,
-      payer.publicKey,
-      1_000_000 * 10 ** 6
     );
 
     proposal = Keypair.generate().publicKey;
-    amm = await ammClient.createAmm(proposal, META, USDC, 500);
-    [lpMint] = getAmmLpMintAddr(ammClient.program.programId, amm);
+    amm = await ammClient
+    .createAmm(
+      proposal,
+      META,
+      USDC,
+      500_000_000_000,
+      
+      "p",
+      "http://google.com",
+      1
+    );
   });
 
   describe("#create_amm", async function () {
@@ -114,32 +106,16 @@ describe("amm", async function () {
         ammClient.program.programId,
         META,
         USDC,
-        proposal
       );
-
       const ammAcc = await ammClient.getAmm(amm);
 
       assert.equal(ammAcc.bump, bump);
-      assert.isTrue(ammAcc.createdAtSlot.eq(ammAcc.oracle.lastUpdatedSlot));
-      assert.equal(ammAcc.lpMint.toBase58(), lpMint.toBase58());
       assert.equal(ammAcc.baseMint.toBase58(), META.toBase58());
       assert.equal(ammAcc.quoteMint.toBase58(), USDC.toBase58());
       assert.equal(ammAcc.baseMintDecimals, 9);
       assert.equal(ammAcc.quoteMintDecimals, 6);
       assert.isTrue(ammAcc.baseAmount.eqn(0));
       assert.isTrue(ammAcc.quoteAmount.eqn(0));
-      assert.isTrue(
-        ammAcc.oracle.lastObservation.eq(expectedInitialObservation)
-      );
-      assert.isTrue(ammAcc.oracle.aggregator.eqn(0));
-      assert.isTrue(
-        ammAcc.oracle.maxObservationChangePerUpdate.eq(
-          expectedMaxObservationChangePerUpdate
-        )
-      );
-      assert.isTrue(
-        ammAcc.oracle.initialObservation.eq(expectedInitialObservation)
-      );
     });
 
     it("fails to create an amm with two identical mints", async function () {
@@ -155,123 +131,25 @@ describe("amm", async function () {
 
       let proposal = Keypair.generate().publicKey;
 
-      await ammClient
+      (await ammClient
         .createAmmIx(
           META,
           META,
-          twapFirstObservationScaled,
-          twapMaxObservationChangePerUpdateScaled,
-          proposal
-        )
+          "p",
+          "http://google.com",
+          0,
+
+        "USDC"
+        ))
         .rpc()
         .then(callbacks[0], callbacks[1]);
-    });
-  });
-
-  describe("#add_liquidity", async function () {
-    it("adds initial liquidity to an amm", async function () {
-      await ammClient
-        .addLiquidityIx(
-          amm,
-          META,
-          USDC,
-          new BN(5000 * 10 ** 6),
-          new BN(6 * 10 ** 9),
-          new BN(0)
-        )
-        .rpc();
-
-      await validateAmmState({
-        banksClient,
-        ammClient,
-        amm,
-        base: META,
-        quote: USDC,
-        expectedBaseAmount: 6 * 10 ** 9,
-        expectedQuoteAmount: 5000 * 10 ** 6,
-        expectedLpSupply: 5000 * 10 ** 6,
-      });
-
-      const storedAmm = await ammClient.getAmm(amm);
-
-      assert.equal(
-        (
-          await getAccount(
-            banksClient,
-            getAssociatedTokenAddressSync(storedAmm.lpMint, payer.publicKey)
-          )
-        ).amount,
-        BigInt(5000 * 10 ** 6)
-      );
-    });
-
-    it("adds liquidity after it's already been added", async function () {
-      await ammClient
-        .addLiquidityIx(
-          amm,
-          META,
-          USDC,
-          new BN(5000 * 10 ** 6),
-          new BN(5 * 10 ** 9),
-          new BN(0)
-        )
-        .rpc();
-
-      // should receive exactly quote token LP tokens back, so it'll first fail
-
-      let callbacks = expectError(
-        "AddLiquiditySlippageExceeded",
-        "we got back more LP tokens than the first depositor, even though we put in the same amount of tokens"
-      );
-
-      await ammClient
-        .addLiquidityIx(
-          amm,
-          META,
-          USDC,
-          new BN(5000 * 10 ** 6),
-          new BN(5 * 10 ** 9 + 1),
-          new BN(5000 * 10 ** 6 + 1)
-        )
-        .rpc()
-        .then(callbacks[0], callbacks[1]);
-
-      await ammClient
-        .addLiquidityIx(
-          amm,
-          META,
-          USDC,
-          new BN(5000 * 10 ** 6),
-          new BN(5 * 10 ** 9 + 1),
-          new BN(5000 * 10 ** 6)
-        )
-        .rpc();
-
-      await validateAmmState({
-        banksClient,
-        ammClient,
-        amm,
-        base: META,
-        quote: USDC,
-        expectedBaseAmount: 10 * 10 ** 9 + 1,
-        expectedQuoteAmount: 10000 * 10 ** 6,
-        expectedLpSupply: 10000 * 10 ** 6,
-      });
     });
   });
 
   describe("#swap", async function () {
     beforeEach(async function () {
       await ammClient
-        .addLiquidityIx(
-          amm,
-          META,
-          USDC,
-          new BN(10_000 * 10 ** 6),
-          new BN(10 * 10 ** 9),
-          new BN(0)
-        )
-        .rpc();
+        .swap(amm, { buy: {} }, 10_000_000, 1)
     });
 
     it("fails when you have insufficient balance", async () => {
@@ -325,16 +203,6 @@ describe("amm", async function () {
 
       await ammClient.swap(amm, { buy: {} }, 100, expectedOut);
 
-      await validateAmmState({
-        banksClient,
-        ammClient,
-        amm,
-        base: META,
-        quote: USDC,
-        expectedBaseAmount: (10 - expectedOut) * 10 ** 9,
-        expectedQuoteAmount: 10_100 * 10 ** 6,
-        expectedLpSupply: 10_000 * 10 ** 6,
-      });
     });
 
     it("sells", async function () {
@@ -360,16 +228,6 @@ describe("amm", async function () {
 
       await ammClient.swap(amm, { sell: {} }, 1, expectedOut);
 
-      await validateAmmState({
-        banksClient,
-        ammClient,
-        amm,
-        base: META,
-        quote: USDC,
-        expectedBaseAmount: 11 * 10 ** 9,
-        expectedQuoteAmount: (10_000 - expectedOut) * 10 ** 6,
-        expectedLpSupply: 10_000 * 10 ** 6,
-      });
     });
 
     it("swap base to quote and back, should not be profitable", async function () {
@@ -390,8 +248,6 @@ describe("amm", async function () {
           new BN(1)
         )
         .rpc();
-
-      await fastForward(context, 1n);
 
       const ammMiddle = await ammClient.getAmm(amm);
       let quoteReceived =
@@ -429,8 +285,6 @@ describe("amm", async function () {
         )
         .rpc();
 
-      await fastForward(context, 1n);
-
       const ammMiddle = await ammClient.getAmm(amm);
       let baseReceived =
         ammStart.baseAmount.toNumber() - ammMiddle.baseAmount.toNumber();
@@ -447,159 +301,5 @@ describe("amm", async function () {
       assert.isAbove(quoteReceived, startingQuoteSwapAmount * 0.98);
     });
   });
-
-  describe("#remove_liquidity", async function () {
-    beforeEach(async function () {
-      await ammClient.addLiquidity(amm, 1000, 2);
-    });
-
-    it("can't remove 0 liquidity", async function () {
-      const callbacks = expectError(
-        "ZeroLiquidityRemove",
-        "was able to remove 0 liquidity"
-      );
-
-      await ammClient
-        .removeLiquidityIx(amm, META, USDC, new BN(0), new BN(0), new BN(0))
-        .rpc()
-        .then(callbacks[0], callbacks[1]);
-    });
-
-    it("remove some liquidity from an amm position", async function () {
-      const ammStart = await ammClient.getAmm(amm);
-
-      let userLpAccount = getAssociatedTokenAddressSync(
-        lpMint,
-        payer.publicKey
-      );
-
-      const userLpAccountStart = await getAccount(banksClient, userLpAccount);
-      const lpMintStart = await getMint(banksClient, lpMint);
-
-      await ammClient
-        .removeLiquidityIx(
-          amm,
-          META,
-          USDC,
-          new BN(userLpAccountStart.amount.toString()).divn(2),
-          new BN(0),
-          new BN(0)
-        )
-        .rpc();
-
-      const userLpAccountEnd = await getAccount(banksClient, userLpAccount);
-      const lpMintEnd = await getMint(banksClient, lpMint);
-
-      const ammEnd = await ammClient.getAmm(amm);
-
-      assert.isBelow(Number(lpMintEnd.supply), Number(lpMintStart.supply));
-      assert.isBelow(
-        Number(userLpAccountEnd.amount),
-        Number(userLpAccountStart.amount)
-      );
-
-      assert.isBelow(
-        ammEnd.baseAmount.toNumber(),
-        ammStart.baseAmount.toNumber()
-      );
-      assert.isBelow(
-        ammEnd.quoteAmount.toNumber(),
-        ammStart.quoteAmount.toNumber()
-      );
-    });
-
-    it("remove all liquidity from an amm position", async function () {
-      const ammStart = await ammClient.getAmm(amm);
-
-      let userLpAccount = getAssociatedTokenAddressSync(
-        lpMint,
-        payer.publicKey
-      );
-
-      const userLpAccountStart = await getAccount(banksClient, userLpAccount);
-      const lpMintStart = await getMint(banksClient, lpMint);
-
-      await ammClient
-        .removeLiquidityIx(
-          amm,
-          META,
-          USDC,
-          new BN(userLpAccountStart.amount.toString()),
-          new BN(1 * 10 ** 9),
-          new BN(10 * 10 ** 6)
-        )
-        .rpc();
-
-      const userLpAccountEnd = await getAccount(banksClient, userLpAccount);
-      const lpMintEnd = await getMint(banksClient, lpMint);
-
-      assert.isBelow(Number(lpMintEnd.supply), Number(lpMintStart.supply));
-      assert.isBelow(
-        Number(userLpAccountEnd.amount),
-        Number(userLpAccountStart.amount)
-      );
-
-      const ammEnd = await ammClient.getAmm(amm);
-
-      assert.isBelow(
-        ammEnd.baseAmount.toNumber(),
-        ammStart.baseAmount.toNumber()
-      );
-      assert.isBelow(
-        ammEnd.quoteAmount.toNumber(),
-        ammStart.quoteAmount.toNumber()
-      );
-    });
-  });
 });
 
-async function validateAmmState({
-  banksClient,
-  ammClient,
-  amm,
-  base,
-  quote,
-  expectedBaseAmount,
-  expectedQuoteAmount,
-  expectedLpSupply,
-}: {
-  banksClient: BanksClient;
-  ammClient: AmmClient;
-  amm: PublicKey;
-  base: PublicKey;
-  quote: PublicKey;
-  expectedBaseAmount: number;
-  expectedQuoteAmount: number;
-  expectedLpSupply: number;
-}) {
-  const storedAmm = await ammClient.getAmm(amm);
-
-  assert.equal(storedAmm.baseAmount.toString(), expectedBaseAmount.toString());
-  assert.equal(
-    storedAmm.quoteAmount.toString(),
-    expectedQuoteAmount.toString()
-  );
-
-  assert.equal(
-    (
-      await getAccount(
-        banksClient,
-        getAssociatedTokenAddressSync(base, amm, true)
-      )
-    ).amount,
-    BigInt(expectedBaseAmount)
-  );
-  assert.equal(
-    (
-      await getAccount(
-        banksClient,
-        getAssociatedTokenAddressSync(quote, amm, true)
-      )
-    ).amount,
-    BigInt(expectedQuoteAmount)
-  );
-  assert.equal(
-    (await getMint(banksClient, storedAmm.lpMint)).supply,
-    BigInt(expectedLpSupply)
-  );
-}

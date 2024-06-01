@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { AutocratClient, PriceMath } from "@metadaoproject/futarchy";
+import { AutocratClient, PriceMath } from "../sdk/dist";
 import {
   DEAN_DEVNET,
   DEVNET_DARK,

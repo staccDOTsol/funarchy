@@ -95,7 +95,11 @@ export class ProgramFacade {
 
     await this.program.methods
       .initializeMember(name)
-      .accounts({
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
         member,
         treasury,
         tokenMint: tokenMint.publicKey,
@@ -117,7 +121,11 @@ export class ProgramFacade {
 
     await this.program.methods
       .initializeMetaDao()
-      .accounts({
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
         metaDao: metaDAO,
         seedMember,
         initializer: this.payer.publicKey,
@@ -159,7 +167,11 @@ export class ProgramFacade {
           1000
         ),
       ])
-      .accounts({
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
         proposal: proposalKeypair.publicKey,
         metaDao: metaDAO,
         initializer: this.payer.publicKey,
@@ -189,7 +201,11 @@ export class ProgramFacade {
   }
 
   async executeProposal(proposal: PublicKey, remainingAccounts?: []) {
-    let builder = this.program.methods.executeProposal().accounts({
+    let builder = this.program.methods.executeProposal().preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       proposal,
     });
 
@@ -219,7 +235,11 @@ export class ProgramFacade {
 
     await this.program.methods
       .initializeConditionalExpression(passOrFail)
-      .accounts({
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
         conditionalExpression,
         initializer: this.payer.publicKey,
         systemProgram: anchor.web3.SystemProgram.programId,
@@ -256,7 +276,11 @@ export class ProgramFacade {
 
     await this.program.methods
       .initializeVault()
-      .accounts({
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
         vault,
         conditionalExpression,
         underlyingTokenMint,
@@ -297,7 +321,11 @@ export class ProgramFacade {
 
     await this.program.methods
       .initializeDepositSlip(depositor)
-      .accounts({
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
         vault,
         depositSlip,
         initializer: this.payer.publicKey,
@@ -345,7 +373,11 @@ export class ProgramFacade {
     const bnAmount = new anchor.BN(amount);
     await this.program.methods
       .mintConditionalTokens(bnAmount)
-      .accounts({
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
         user: user.publicKey,
         depositSlip,
         vault,
@@ -418,7 +450,11 @@ export class ProgramFacade {
 
     await this.program.methods
       .redeemConditionalTokensForUnderlyingTokens()
-      .accounts({
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
         user: user.publicKey,
         userConditionalTokenAccount,
         userUnderlyingTokenAccount,
@@ -482,7 +518,11 @@ export class ProgramFacade {
 
     await this.program.methods
       .redeemDepositSlipForUnderlyingTokens()
-      .accounts({
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
         user: user.publicKey,
         userDepositSlip,
         userUnderlyingTokenAccount,
@@ -522,6 +562,10 @@ export class ProgramFacade {
   }
 
   async failProposal(proposal: PublicKey) {
-    await this.program.methods.failProposal().accounts({ proposal }).rpc();
+    await this.program.methods.failProposal().preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({ proposal }).rpc();
   }
 }

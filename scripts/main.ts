@@ -197,7 +197,11 @@ async function generateAddMetadataToConditionalTokensIx(
       passTokenMetadataUri,
       failTokenMetadataUri
     )
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       payer: payer.publicKey,
       vault,
       underlyingTokenMint: mint,
@@ -254,7 +258,11 @@ async function initializeVault(
 
   const initializeConditionalVaultBuilder = vaultProgram.methods
     .initializeConditionalVault(settlementAuthority, nonce)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       vault,
       underlyingTokenMint,
       vaultUnderlyingTokenAccount,
@@ -302,7 +310,11 @@ async function initializeVault(
 // export async function initializeDAO(META: any, USDC: any) {
 //   await autocratProgram.methods
 //     .initializeDao()
-//     .accounts({
+//     .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
 //       dao,
 //       metaMint: META,
 //       usdcMint: USDC,
@@ -351,7 +363,11 @@ export async function fetchDao() {
 
 //   const ix = await migrator.methods
 //         .multiTransfer2()
-//         .accounts({
+//         .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
 //           authority: daoTreasury,
 //           from0: treasuryMetaAccount.address,
 //           to0: newTreasuryMetaAccount.address,
@@ -369,7 +385,11 @@ export async function fetchDao() {
 
 //   let tx = await autocratProgram.methods
 //         .finalizeProposal()
-//         .accounts({
+//         .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
 //           proposal,
 //           openbookTwapPassMarket: storedProposal.openbookTwapPassMarket,
 //           openbookTwapFailMarket: storedProposal.openbookTwapFailMarket,
@@ -445,7 +465,7 @@ export async function initializeProposal(
   );
 
   const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-  const elevenDaysInSeconds = 11 * 24 * 60 * 60;
+  const elevenDaysInSeconds = 4 * 24 * 60 * 60;
   const expiryTime = new BN(currentTimeInSeconds + elevenDaysInSeconds);
   const quoteLotSize = new BN(100);
   const baseLotSize = new BN(1e8);
@@ -542,14 +562,22 @@ export async function initializeProposal(
       ),
       await openbookTwap.methods
         .createTwapMarket(new BN(10_000), maxObservationChangePerUpdateLots)
-        .accounts({
+        .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
           market: openbookPassMarketKP.publicKey,
           twapMarket: openbookTwapPassMarket,
         })
         .instruction(),
       await openbookTwap.methods
         .createTwapMarket(new BN(10_000), maxObservationChangePerUpdateLots)
-        .accounts({
+        .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
           market: openbookFailMarketKP.publicKey,
           twapMarket: openbookTwapFailMarket,
         })
@@ -557,7 +585,11 @@ export async function initializeProposal(
       cuPriceIx,
       cuLimitIx,
     ])
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       proposal: proposalKeypair.publicKey,
       dao,
       daoTreasury,
@@ -628,7 +660,11 @@ async function placeOrdersOnBothSides(twapMarket: any) {
 
   await openbookTwap.methods
     .placeOrder(buyArgs)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       asks: storedMarket.asks,
       bids: storedMarket.bids,
       marketVault: storedMarket.marketQuoteVault,
@@ -643,7 +679,11 @@ async function placeOrdersOnBothSides(twapMarket: any) {
 
   await openbookTwap.methods
     .placeOrder(sellArgs)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       asks: storedMarket.asks,
       bids: storedMarket.bids,
       marketVault: storedMarket.marketBaseVault,
@@ -699,7 +739,11 @@ async function placeTakeOrder(twapMarket: any) {
 
   let tx = await openbookTwap.methods
     .placeTakeOrder(buyArgs)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       asks: storedMarket.asks,
       bids: storedMarket.bids,
       eventHeap: storedMarket.eventHeap,
@@ -773,7 +817,11 @@ export async function mintConditionalTokens(amount: number, vault: PublicKey) {
   // Mint conditional tokens
   await vaultProgram.methods
     .mintConditionalTokens(bnAmount)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       authority: payer.publicKey,
       vault,
       vaultUnderlyingTokenAccount,

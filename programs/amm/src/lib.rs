@@ -22,35 +22,19 @@ pub mod state;
 use crate::instructions::*;
 use crate::state::*;
 
-declare_id!("AMM5G2nxuKUwCLRYTW7qqEwuoqCtNSjtbipwEmm2g8bH");
+declare_id!("99ghypT4Bgr3cxvUgLvDrcq818oiBS62P2Qbkq7osAuV");
 
 #[program]
 pub mod amm {
-    use self::add_liquidity::AddLiquidityArgs;
 
     use super::*;
 
     #[access_control(ctx.accounts.validate())]
-    pub fn create_amm(ctx: Context<CreateAmm>, args: CreateAmmArgs) -> Result<()> {
-        CreateAmm::handle(ctx, args)
-    }
-
-    pub fn add_liquidity(ctx: Context<AddOrRemoveLiquidity>, args: AddLiquidityArgs) -> Result<()> {
-        AddOrRemoveLiquidity::handle_add(ctx, args)
-    }
-
-    pub fn remove_liquidity(
-        ctx: Context<AddOrRemoveLiquidity>,
-        args: RemoveLiquidityArgs,
-    ) -> Result<()> {
-        AddOrRemoveLiquidity::handle_remove(ctx, args)
+    pub fn create_amm(ctx: Context<CreateAmm>, pof: String, uri: String, proposal_number: u16, symbol: String) -> Result<()> {
+        CreateAmm::handle(ctx, pof, uri, proposal_number, symbol)
     }
 
     pub fn swap(ctx: Context<Swap>, args: SwapArgs) -> Result<()> {
         Swap::handle(ctx, args)
-    }
-
-    pub fn crank_that_twap(ctx: Context<CrankThatTwap>) -> Result<()> {
-        CrankThatTwap::handle(ctx)
     }
 }

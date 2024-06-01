@@ -3,33 +3,19 @@ import { BN, Program } from "@coral-xyz/anchor";
 import * as token from "@solana/spl-token";
 import { getAssociatedTokenAddressSync } from "@solana/spl-token";
 import { MEMO_PROGRAM_ID } from "@solana/spl-memo";
-import { BankrunProvider } from "anchor-bankrun";
 import { assert } from "chai";
-import {
-  startAnchor,
-  Clock,
-  BanksClient,
-  ProgramTestContext,
-} from "solana-bankrun";
+
 import {
   createMint,
   createAccount,
   createAssociatedTokenAccount,
-  mintToOverride,
   getMint,
-  getAccount,
-} from "spl-token-bankrun";
+  getAccount,mintTo
+} from "@solana/spl-token";
 
-import {
-  mintConditionalTokens,
-  redeemConditionalTokens,
-} from "./conditionalVault";
 
 import { advanceBySlots, expectError } from "./utils/utils";
 import { Autocrat } from "../target/types/autocrat";
-import { ConditionalVault } from "../target/types/conditional_vault";
-import { AutocratMigrator } from "../target/types/autocrat_migrator";
-
 const { PublicKey, Keypair } = anchor.web3;
 
 import {
@@ -39,26 +25,24 @@ import {
   getAmmAddr,
   getAmmLpMintAddr,
   getVaultAddr,
-} from "@metadaoproject/futarchy";
-import { PriceMath } from "@metadaoproject/futarchy";
-import { AutocratClient, ConditionalVaultClient } from "@metadaoproject/futarchy";
+} from "../sdk/dist";
+import { PriceMath } from "../sdk/dist";
+import { AutocratClient, ConditionalVaultClient } from "../sdk/dist";
 import {
   ComputeBudgetInstruction,
   ComputeBudgetProgram,
+  Connection,
   SystemProgram,
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
 
 const AutocratIDL: Autocrat = require("../target/idl/autocrat.json");
-const ConditionalVaultIDL: ConditionalVault = require("../target/idl/conditional_vault.json");
-const AutocratMigratorIDL: AutocratMigrator = require("../target/idl/autocrat_migrator.json");
 
 export type PublicKey = anchor.web3.PublicKey;
 export type Signer = anchor.web3.Signer;
 export type Keypair = anchor.web3.Keypair;
 
-type ProposalInstruction = anchor.IdlTypes<Autocrat>["ProposalInstruction"];
 
 // this test file isn't 'clean' or DRY or whatever; sorry!
 
@@ -73,8 +57,7 @@ describe("autocrat", async function () {
   let provider,
     autocrat,
     payer,
-    context: ProgramTestContext,
-    banksClient: BanksClient,
+    connection,
     dao,
     mertdDao,
     daoTreasury,
@@ -93,9 +76,13 @@ describe("autocrat", async function () {
     mertdTreasuryUsdcAccount;
 
   before(async function () {
-    context = await startAnchor("./", [], []);
-    banksClient = context.banksClient;
-    provider = new BankrunProvider(context);
+    payer = Keypair.fromSecretKey(
+      new Uint8Array(
+        JSON.parse(require('fs').readFileSync(process.env.ANCHOR_WALLET as string, "utf-8"))
+      )
+    );
+     connection = new Connection(process.env.ANCHOR_PROVIDER as string, "confirmed")
+    provider = new anchor.AnchorProvider(connection, new anchor.Wallet(payer), {})
     anchor.setProvider(provider);
 
     ammClient = AmmClient.createClient({ provider });
@@ -108,32 +95,21 @@ describe("autocrat", async function () {
       provider
     );
 
-    vaultProgram = new Program<ConditionalVault>(
-      ConditionalVaultIDL,
-      CONDITIONAL_VAULT_PROGRAM_ID,
-      provider
-    );
-
-    migrator = new anchor.Program<AutocratMigrator>(
-      AutocratMigratorIDL,
-      AUTOCRAT_MIGRATOR_PROGRAM_ID,
-      provider
-    );
 
     payer = provider.wallet.payer;
 
     USDC = await createMint(
-      banksClient,
+      provider.connection,
       payer,
       payer.publicKey,
       payer.publicKey,
       6
     );
 
-    META = await createMint(banksClient, payer, dao, dao, 9);
+    META = await createMint(provider.connection, payer, dao, dao, 9);
 
     MERTD = await createMint(
-      banksClient,
+      provider.connection,
       payer,
       payer.publicKey,
       payer.publicKey,
@@ -141,28 +117,34 @@ describe("autocrat", async function () {
     );
 
     await createAssociatedTokenAccount(
-      banksClient,
+      provider.connection,
       payer,
       META,
       payer.publicKey
     );
     await createAssociatedTokenAccount(
-      banksClient,
+      provider.connection,  // this is undefined
       payer,
       USDC,
       payer.publicKey
     );
 
     // 1000 META
-    await mintToOverride(
-      context,
+    await mintTo(
+      provider.connection,
+      payer,
+      META,
       getAssociatedTokenAddressSync(META, payer.publicKey),
+      payer.publicKey,
       1_000n * 1_000_000_000n
     );
     // 200,000 USDC
-    await mintToOverride(
-      context,
+    await mintTo(
+      provider.connection,
+      payer,
+      USDC,
       getAssociatedTokenAddressSync(USDC, payer.publicKey),
+      payer.publicKey,
       200_000n * 1_000_000n
     );
   });
@@ -186,13 +168,13 @@ describe("autocrat", async function () {
       assert.equal(storedDao.passThresholdBps, 300);
 
       treasuryMetaAccount = await createAssociatedTokenAccount(
-        banksClient,
+        provider.connection,
         payer,
         META,
         daoTreasury
       );
       treasuryUsdcAccount = await createAssociatedTokenAccount(
-        banksClient,
+        provider.connection,
         payer,
         USDC,
         daoTreasury
@@ -214,13 +196,13 @@ describe("autocrat", async function () {
       );
 
       mertdTreasuryMertdAccount = await createAssociatedTokenAccount(
-        banksClient,
+        provider.connection,
         payer,
         MERTD,
         mertdDaoTreasury
       );
       mertdTreasuryUsdcAccount = await createAssociatedTokenAccount(
-        banksClient,
+        provider.connection,
         payer,
         USDC,
         mertdDaoTreasury
@@ -256,13 +238,13 @@ describe("autocrat", async function () {
 
       const preMetaBalance = (
         await getAccount(
-          banksClient,
+          provider.connection,
           getAssociatedTokenAddressSync(META, payer.publicKey)
         )
       ).amount;
       const preUsdcBalance = (
         await getAccount(
-          banksClient,
+          provider.connection,
           getAssociatedTokenAddressSync(USDC, payer.publicKey)
         )
       ).amount;
@@ -277,13 +259,13 @@ describe("autocrat", async function () {
 
       const postMetaBalance = (
         await getAccount(
-          banksClient,
+          provider.connection,
           getAssociatedTokenAddressSync(META, payer.publicKey)
         )
       ).amount;
       const postUsdcBalance = (
         await getAccount(
-          banksClient,
+          provider.connection,
           getAssociatedTokenAddressSync(USDC, payer.publicKey)
         )
       ).amount;
@@ -297,26 +279,150 @@ describe("autocrat", async function () {
     let proposal: PublicKey;
 
     beforeEach(async function () {
-      await mintToOverride(context, treasuryMetaAccount, 1_000_000_000n);
-      await mintToOverride(context, treasuryUsdcAccount, 1_000_000n);
+      await mintTo(provider.connection, payer, META, treasuryMetaAccount, payer.publicKey, 1_000_000_000n);
+      await mintTo(provider.connection, payer, USDC, treasuryUsdcAccount, payer.publicKey, 1_000_000n);
 
       let receiver = Keypair.generate();
       let to0 = await createAccount(
-        banksClient,
+        provider.connection,
         payer,
         META,
         receiver.publicKey
       );
       let to1 = await createAccount(
-        banksClient,
+        provider.connection,
         payer,
         USDC,
         receiver.publicKey
       );
 
-      const ix = await migrator.methods
+      const ix = await new Program({
+        "version": "0.1.0",
+        "name": "autocrat_migrator",
+        "instructions": [
+          {
+            "name": "multiTransfer2",
+            "accounts": [
+              {
+                "name": "tokenProgram",
+                "isMut": false,
+                "isSigner": false
+              },
+              {
+                "name": "authority",
+                "isMut": true,
+                "isSigner": true
+              },
+              {
+                "name": "from0",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "to0",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "from1",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "to1",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "systemProgram",
+                "isMut": false,
+                "isSigner": false
+              },
+              {
+                "name": "lamportReceiver",
+                "isMut": true,
+                "isSigner": false
+              }
+            ],
+            "args": []
+          },
+          {
+            "name": "multiTransfer4",
+            "accounts": [
+              {
+                "name": "tokenProgram",
+                "isMut": false,
+                "isSigner": false
+              },
+              {
+                "name": "authority",
+                "isMut": true,
+                "isSigner": true
+              },
+              {
+                "name": "from0",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "to0",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "from1",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "to1",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "from2",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "to2",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "from3",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "to3",
+                "isMut": true,
+                "isSigner": false
+              },
+              {
+                "name": "systemProgram",
+                "isMut": false,
+                "isSigner": false
+              },
+              {
+                "name": "lamportReceiver",
+                "isMut": true,
+                "isSigner": false
+              }
+            ],
+            "args": []
+          }
+        ],
+        "metadata": {
+          "address": "6mTKaBzLAxDeZYPUGJiKB1Njbbx8cNoGjs9mNUTaA3FN"
+        }
+      } as anchor.Idl, new PublicKey("MigRDW6uxyNMDBD8fX2njCRyJC4YZk2Rx9pDUZiAESt"), provider).methods
         .multiTransfer2()
-        .accounts({
+        .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
           authority: daoTreasury,
           from0: treasuryMetaAccount,
           to0,
@@ -387,30 +493,15 @@ describe("autocrat", async function () {
         )
         .rpc();
 
-      for (let i = 0; i < 100; i++) {
-        await advanceBySlots(context, 10_000n);
-
-        await ammClient
-          .crankThatTwapIx(passAmm)
-          .preInstructions([
-            // this is to get around bankrun thinking we've processed the same transaction multiple times
-            ComputeBudgetProgram.setComputeUnitPrice({
-              microLamports: i,
-            }),
-            await ammClient.crankThatTwapIx(failAmm).instruction(),
-          ])
-          .rpc();
-      }
-
       const prePassLpBalance = (
         await getAccount(
-          banksClient,
+          provider.connection,
           getAssociatedTokenAddressSync(passLp, payer.publicKey)
         )
       ).amount;
       const preFailLpBalance = (
         await getAccount(
-          banksClient,
+          provider.connection,
           getAssociatedTokenAddressSync(failLp, payer.publicKey)
         )
       ).amount;
@@ -419,13 +510,13 @@ describe("autocrat", async function () {
 
       const postPassLpBalance = (
         await getAccount(
-          banksClient,
+          provider.connection,
           getAssociatedTokenAddressSync(passLp, payer.publicKey)
         )
       ).amount;
       const postFailLpBalance = (
         await getAccount(
-          banksClient,
+          provider.connection,
           getAssociatedTokenAddressSync(failLp, payer.publicKey)
         )
       ).amount;
@@ -436,12 +527,6 @@ describe("autocrat", async function () {
       let storedPassAmm = await ammClient.getAmm(passAmm);
       let storedFailAmm = await ammClient.getAmm(failAmm);
 
-      console.log(
-        PriceMath.getHumanPrice(storedPassAmm.oracle.lastObservation, 9, 6)
-      );
-      console.log(
-        PriceMath.getHumanPrice(storedFailAmm.oracle.lastObservation, 9, 6)
-      );
 
       let passTwap = ammClient.getTwap(storedPassAmm);
 
@@ -479,32 +564,12 @@ describe("autocrat", async function () {
         )
         .rpc();
 
-      for (let i = 0; i < 100; i++) {
-        await advanceBySlots(context, 10_000n);
-
-        await ammClient
-          .crankThatTwapIx(passAmm)
-          .preInstructions([
-            // this is to get around bankrun thinking we've processed the same transaction multiple times
-            ComputeBudgetProgram.setComputeUnitPrice({
-              microLamports: i,
-            }),
-            await ammClient.crankThatTwapIx(failAmm).instruction(),
-          ])
-          .rpc();
-      }
 
       await autocratClient.finalizeProposal(proposal);
 
       let storedPassAmm = await ammClient.getAmm(passAmm);
       let storedFailAmm = await ammClient.getAmm(failAmm);
 
-      console.log(
-        PriceMath.getHumanPrice(storedPassAmm.oracle.lastObservation, 9, 6)
-      );
-      console.log(
-        PriceMath.getHumanPrice(storedFailAmm.oracle.lastObservation, 9, 6)
-      );
 
       let passTwap = ammClient.getTwap(storedPassAmm);
 
@@ -525,8 +590,8 @@ describe("autocrat", async function () {
     let proposal, passAmm, failAmm, baseVault, quoteVault, instruction;
 
     beforeEach(async function () {
-      await mintToOverride(context, treasuryMetaAccount, 1_000_000_000n);
-      await mintToOverride(context, treasuryUsdcAccount, 1_000_000n);
+      await mintTo(provider.connection, payer, META, treasuryMetaAccount, payer.publicKey, 1_000_000_000n);
+      await mintTo(provider.connection, payer, USDC, treasuryUsdcAccount, payer.publicKey, 1_000_000n);
 
       const accounts = [
         {
@@ -583,24 +648,6 @@ describe("autocrat", async function () {
     });
 
     it("doesn't allow failed proposals to be executed", async function () {
-      let currentClock = await context.banksClient.getClock();
-      const newSlot = currentClock.slot + 10_000_000n;
-      context.setClock(
-        new Clock(
-          newSlot,
-          currentClock.epochStartTimestamp,
-          currentClock.epoch,
-          currentClock.leaderScheduleEpoch,
-          currentClock.unixTimestamp
-        )
-      );
-
-      await ammClient
-        .crankThatTwapIx(passAmm)
-        .preInstructions([
-          await ammClient.crankThatTwapIx(failAmm).instruction(),
-        ])
-        .rpc();
 
       await autocratClient.finalizeProposal(proposal);
 
@@ -642,20 +689,6 @@ describe("autocrat", async function () {
         )
         .rpc();
 
-      for (let i = 0; i < 50; i++) {
-        await advanceBySlots(context, 20_000n);
-
-        await ammClient
-          .crankThatTwapIx(passAmm)
-          .preInstructions([
-            // this is to get around bankrun thinking we've processed the same transaction multiple times
-            ComputeBudgetProgram.setComputeUnitPrice({
-              microLamports: i,
-            }),
-            await ammClient.crankThatTwapIx(failAmm).instruction(),
-          ])
-          .rpc();
-      }
 
       await autocratClient.finalizeProposal(proposal);
 

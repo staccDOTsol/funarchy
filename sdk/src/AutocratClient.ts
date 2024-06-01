@@ -292,7 +292,7 @@ export class AutocratClient {
       new Uint8Array(
         JSON.parse(
           require("fs").readFileSync(
-            "/Users/jd/.config/solana/id.json",
+            "/home/ubuntu/.config/solana/id.json",
             "utf-8"
           )
         )

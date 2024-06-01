@@ -59,7 +59,11 @@ async function main() {
 
   await vaultProgram.methods
     .initializeConditionalVault(settlementAuthority, nonce)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       vault,
       underlyingTokenMint,
       vaultUnderlyingTokenAccount,
