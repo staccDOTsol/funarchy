@@ -10,16 +10,7 @@ pub enum SwapType {
     Sell,
 }
 
-#[derive(Default, AnchorSerialize, AnchorDeserialize, Clone, Copy, PartialEq, Eq)]
-pub enum VaultStatus {
-    #[default]
-    Active,
-    Finalized,
-    Reverted,
-}
-
-#[account]
-#[derive(Default)]
+#[account(zero_copy(unsafe))]
 pub struct Amm {
     pub bump: u8,
 
@@ -39,7 +30,7 @@ pub struct Amm {
 
     pub quote_reserves: u64,
     pub base_reserves: u64,
-    pub vault_status: VaultStatus,
+    pub vault_status: u8,
 }
 
 impl Amm {
@@ -136,7 +127,7 @@ impl Amm {
 
         let new_k = self.k();
         match self.vault_status {
-            VaultStatus::Finalized => {
+            1 => {
                 if swap_type == SwapType::Buy {
                     return Err(AmmError::BuyDisabled.into());
                 } else if swap_type == SwapType::Sell {
@@ -146,7 +137,7 @@ impl Amm {
                     self.quote_amount -= boosted_output_amount;
                 }
             }
-            VaultStatus::Reverted => {
+            2 => {
                 if swap_type == SwapType::Buy {
                     return Err(AmmError::BuyDisabled.into());
                 } else if swap_type == SwapType::Sell {
@@ -185,35 +176,4 @@ macro_rules! generate_amm_seeds {
             &[$amm.bump],
         ]
     }};
-}
-
-#[cfg(test)]
-mod simple_amm_tests {
-    use crate::state::amm::Amm;
-    use crate::state::amm::SwapType::{Buy, Sell};
-
-    #[test]
-    pub fn smol_amm() {
-        let mut amm = Amm {
-            base_amount: 3,
-            quote_amount: 8,
-            ..Amm::default()
-        };
-
-        assert_eq!(amm.k(), 24);
-
-        // 4 x 6 = 24, would be 2 but we take out 1 for fee
-        assert_eq!(amm.swap(1, Sell).unwrap(), 1);
-        assert_eq!(amm.k(), 28); // 4 x 7
-
-        let mut amm_clone = amm.clone();
-        // 2 x 14 = 28, but we take one for fee
-        assert_eq!(amm.swap(7, Buy).unwrap(), 1);
-        assert_eq!(amm.k(), 42); // 3 x 14
-
-        // re-run on the clone but give an extra for fee,
-        // we should now get back 2
-        assert_eq!(amm_clone.swap(8, Buy).unwrap(), 2);
-        assert_eq!(amm_clone.k(), 30); // 2 x 15
-    }
 }

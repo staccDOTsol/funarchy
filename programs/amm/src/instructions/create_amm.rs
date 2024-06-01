@@ -15,7 +15,7 @@ pub struct CreateAmm<'info> {
     #[account(
         init,
         payer = user,
-        space = 8 + Amm::LEN,
+        space = 8 + 128 + 128,
         seeds = [
             AMM_SEED_PREFIX,
             base_mint.key().as_ref(),
@@ -23,7 +23,7 @@ pub struct CreateAmm<'info> {
         ],
         bump
     )]
-    pub amm: Box<Account<'info, Amm>>,
+    pub amm: AccountLoader<'info, Amm>,
     #[account(mut,
     mint::authority = amm,
     mint::freeze_authority = amm,
@@ -80,8 +80,6 @@ impl CreateAmm<'_> {
 
         let current_slot = Clock::get()?.slot;
 
-        amm.reload()?;
-
         // there are null bytes we must trim from string, otherwise string value is longer than we want
         let quote_token_symbol_raw = osymbol.clone();
         let quote_token_symbol = quote_token_symbol_raw.trim_matches(char::from(0));
@@ -92,7 +90,7 @@ impl CreateAmm<'_> {
             AMM_SEED_PREFIX,
             &base_mint.to_account_info().key.as_ref(),
             &quote_mint.to_account_info().key.as_ref(),
-            &[amm.bump],
+            &[amm.load()?.bump],
         ];
 
         for (symbol, uri, metadata, mint) in [
@@ -144,26 +142,26 @@ impl CreateAmm<'_> {
             ),
             1_000_000_000_i32.pow(base_mint.decimals as u32) as u64,
         )?;
-        amm.set_inner(Amm {
-            bump: ctx.bumps.amm,
+        let mut amm = amm.load_init()?;
+        
+            amm.bump = ctx.bumps.amm;
 
-            created_at_slot: current_slot,
+            amm.created_at_slot = current_slot;
 
-            base_mint: base_mint.key(),
-            quote_mint: quote_mint.key(),
+            amm.base_mint = base_mint.key();
+            amm.quote_mint = quote_mint.key();
 
-            base_mint_decimals: base_mint.decimals,
-            quote_mint_decimals: quote_mint.decimals,
+            amm.base_mint_decimals = base_mint.decimals;
+            amm.quote_mint_decimals = quote_mint.decimals;
 
-            base_amount: 0,
-            quote_amount: 0,
+            amm.base_amount = 0;
+            amm.quote_amount = 0;
 
-            v_base_reserves: 1_000_000_000_u128.pow(base_mint.decimals as u32) as u64,
-            v_quote_reserves: 10_u128.pow(quote_mint.decimals as u32) as u64 * 2,
-            base_reserves: 1_000_000_000_u128.pow(base_mint.decimals as u32) as u64,
-            quote_reserves: 0,
-            vault_status: VaultStatus::Active,
-        });
+            amm.v_base_reserves = 1_000_000_000_u128.pow(base_mint.decimals as u32) as u64;
+            amm.v_quote_reserves = 10_u128.pow(quote_mint.decimals as u32) as u64 * 2;
+            amm.base_reserves = 1_000_000_000_u128.pow(base_mint.decimals as u32) as u64;
+            amm.quote_reserves = 0;
+            amm.vault_status = 0;
 
         Ok(())
     }

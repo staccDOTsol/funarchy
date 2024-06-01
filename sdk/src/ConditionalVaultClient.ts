@@ -4,6 +4,8 @@ import {
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
+  SYSVAR_RENT_PUBKEY,
+  SystemProgram,
 } from "@solana/web3.js";
 
 import {
@@ -24,10 +26,12 @@ import {
 } from "./utils";
 import { MethodsBuilder } from "@coral-xyz/anchor/dist/cjs/program/namespace/methods";
 import {
+  TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotentInstruction,
   createAssociatedTokenAccountInstruction,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
+import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
 export type CreateVaultClientParams = {
   provider: AnchorProvider;
@@ -36,7 +40,7 @@ export type CreateVaultClientParams = {
 
 export class ConditionalVaultClient {
   public readonly provider: AnchorProvider;
-  public readonly vaultProgram: Program<ConditionalVault>;
+  public readonly vaultProgram: Program<any>;
   public readonly luts: AddressLookupTableAccount[];
 
   constructor(
@@ -45,11 +49,7 @@ export class ConditionalVaultClient {
     luts: AddressLookupTableAccount[]
   ) {
     this.provider = provider;
-    this.vaultProgram = new Program<ConditionalVault>(
-      ConditionalVaultIDL,
-      conditionalVaultProgramId,
-      provider
-    );
+    this.vaultProgram = new Program<any>(ConditionalVaultIDL, provider);
     this.luts = luts;
   }
 
@@ -68,6 +68,7 @@ export class ConditionalVaultClient {
   }
 
   async getVault(vault: PublicKey) {
+    // @ts-ignore
     return this.vaultProgram.account.conditionalVault.fetch(vault);
   }
 
@@ -126,6 +127,7 @@ export class ConditionalVaultClient {
       userPubkey
     );
 
+    // @ts-ignore
     let ix = this.vaultProgram.methods
       .mintConditionalTokens(amount)
       .preInstructions([
@@ -136,6 +138,7 @@ export class ConditionalVaultClient {
       .accounts({
         authority: userPubkey,
         vault,
+        tokenProgram: TOKEN_PROGRAM_ID,
         vaultUnderlyingTokenAccount: getAssociatedTokenAddressSync(
           underlyingTokenMint,
           vault,
@@ -175,7 +178,7 @@ export class ConditionalVaultClient {
   initializeVaultIx(
     settlementAuthority: PublicKey,
     underlyingTokenMint: PublicKey
-  ): MethodsBuilder<ConditionalVault, any> {
+  ): MethodsBuilder<any, any> {
     const [vault] = getVaultAddr(
       this.vaultProgram.programId,
       settlementAuthority,
@@ -210,6 +213,10 @@ export class ConditionalVaultClient {
         vaultUnderlyingTokenAccount,
         conditionalOnFinalizeTokenMint,
         conditionalOnRevertTokenMint,
+        associatedTokenProgram: ASSOCIATED_PROGRAM_ID,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        payer: this.provider.publicKey,
       })
       .preInstructions([
         createAssociatedTokenAccountIdempotentInstruction(
@@ -268,6 +275,8 @@ export class ConditionalVaultClient {
         conditionalOnFinalizeTokenMetadata,
         conditionalOnRevertTokenMetadata,
         tokenMetadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
       });
   }
 

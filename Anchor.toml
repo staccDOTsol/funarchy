@@ -1,11 +1,11 @@
 [toolchain]
-        anchor_version = "0.30.0"
+        anchor_version = "0.28.0"
 [features]
 seeds = false
 skip-lint = false
 
 [programs.localnet]
-amm = "GQFQqovdVdjmCCj5KoTsuurJU6cqg5PZ7kwihb2mvPoo"
+amm = "6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj"
 autocrat = "J7MpMtBj4WVNJ7MQxFj8owfjXAe7BmmdoGgMuh8xMuMU"
 
 [registry]

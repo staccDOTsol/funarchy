@@ -18,7 +18,7 @@ export const getVaultAddr = (
 ) => {
   return PublicKey.findProgramAddressSync(
     [
-      utils.bytes.utf8.encode("conditional_vault"),
+      Buffer.from("conditional_vault"),
       settlementAuthority.toBuffer(),
       underlyingTokenMint.toBuffer(),
     ],
@@ -36,7 +36,7 @@ export const getVaultFinalizeMintAddr = (
 export const getMetadataAddr = (mint: PublicKey) => {
   return PublicKey.findProgramAddressSync(
     [
-      utils.bytes.utf8.encode("metadata"),
+      Buffer.from("metadata"),
       MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
@@ -57,7 +57,7 @@ const getVaultMintAddr = (
   seed: string
 ) => {
   return PublicKey.findProgramAddressSync(
-    [utils.bytes.utf8.encode(seed), vault.toBuffer()],
+    [Buffer.from(seed), vault.toBuffer()],
     programId
   );
 };
@@ -76,7 +76,7 @@ export const getProposalAddr = (
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
-      utils.bytes.utf8.encode("proposal"),
+      Buffer.from("proposal"),
       proposer.toBuffer(),
       nonce.toArrayLike(Buffer, "le", 8),
     ],
@@ -90,12 +90,8 @@ export const getAmmAddr = (
   quoteMint: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [
-      utils.bytes.utf8.encode("amm__"),
-      baseMint.toBuffer(),
-      quoteMint.toBuffer(),
-    ],
-    programId
+    [Buffer.from("amm__"), baseMint.toBuffer(), quoteMint.toBuffer()],
+    new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
   );
 };
 
@@ -104,7 +100,7 @@ export const getAmmLpMintAddr = (
   amm: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [utils.bytes.utf8.encode("amm_lp_mint"), amm.toBuffer()],
+    [Buffer.from("amm_lp_mint"), amm.toBuffer()],
     programId
   );
 };

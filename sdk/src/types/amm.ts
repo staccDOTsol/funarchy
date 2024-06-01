@@ -1,69 +1,85 @@
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/amm.json`.
+ */
 export type Amm = {
-  version: "0.3.0";
-  name: "amm";
+  address: "6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj";
+  metadata: {
+    name: "amm";
+    version: "0.3.0";
+    spec: "0.1.0";
+    description: "Created with Anchor";
+  };
   instructions: [
     {
       name: "createAmm";
+      discriminator: [242, 91, 21, 170, 5, 68, 125, 64];
       accounts: [
         {
           name: "user";
-          isMut: true;
-          isSigner: true;
+          writable: true;
+          signer: true;
         },
         {
           name: "amm";
-          isMut: true;
-          isSigner: false;
+          writable: true;
+          pda: {
+            seeds: [
+              {
+                kind: "const";
+                value: [97, 109, 109, 95, 95];
+              },
+              {
+                kind: "account";
+                path: "baseMint";
+              },
+              {
+                kind: "account";
+                path: "quoteMint";
+              }
+            ];
+          };
         },
         {
           name: "baseMint";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "quoteMint";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "vaultAtaBase";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "vaultAtaQuote";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
+          address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
+          address: "11111111111111111111111111111111";
         },
         {
           name: "baseTokenMetadata";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "metadataProgram";
-          isMut: false;
-          isSigner: false;
+          address: "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s";
         },
         {
           name: "rent";
-          isMut: false;
-          isSigner: false;
+          address: "SysvarRent111111111111111111111111111111111";
         }
       ];
       args: [
@@ -87,128 +103,107 @@ export type Amm = {
     },
     {
       name: "swap";
+      discriminator: [248, 198, 158, 145, 225, 117, 135, 200];
       accounts: [
         {
           name: "user";
-          isMut: true;
-          isSigner: true;
+          writable: true;
+          signer: true;
         },
         {
           name: "amm";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "userBaseAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "userQuoteAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "vaultAtaBase";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "vaultAtaQuote";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
+          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA";
         },
         {
           name: "token2022Program";
-          isMut: false;
-          isSigner: false;
+          address: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb";
         },
         {
           name: "baseMint";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "quoteMint";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "raydiumCpSwapProgram";
-          isMut: false;
-          isSigner: false;
+          address: "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C";
         },
         {
           name: "ammConfig";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "authority";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "poolAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "associatedTokenProgram";
-          isMut: false;
-          isSigner: false;
+          address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL";
         },
         {
           name: "systemProgram";
-          isMut: false;
-          isSigner: false;
+          address: "11111111111111111111111111111111";
         },
         {
           name: "rent";
-          isMut: false;
-          isSigner: false;
+          address: "SysvarRent111111111111111111111111111111111";
         },
         {
           name: "token0Vault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "token1Vault";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "createLpAccount";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "createPoolFee";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "observationKey";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         },
         {
           name: "lpMint";
-          isMut: true;
-          isSigner: false;
+          writable: true;
         }
       ];
       args: [
         {
           name: "args";
           type: {
-            defined: "SwapArgs";
+            defined: {
+              name: "swapArgs";
+            };
           };
         }
       ];
@@ -217,6 +212,124 @@ export type Amm = {
   accounts: [
     {
       name: "amm";
+      discriminator: [143, 245, 200, 17, 74, 214, 196, 135];
+    }
+  ];
+  errors: [
+    {
+      code: 6000;
+      name: "noSlotsPassed";
+      msg: "Can't get a TWAP before some observations have been stored";
+    },
+    {
+      code: 6001;
+      name: "noReserves";
+      msg: "Can't swap through a pool without token reserves on either side";
+    },
+    {
+      code: 6002;
+      name: "inputAmountOverflow";
+      msg: "Input token amount is too large for a swap, causes overflow";
+    },
+    {
+      code: 6003;
+      name: "addLiquidityCalculationError";
+      msg: "Add liquidity calculation error";
+    },
+    {
+      code: 6004;
+      name: "decimalScaleError";
+      msg: "Error in decimal scale conversion";
+    },
+    {
+      code: 6005;
+      name: "sameTokenMints";
+      msg: "You can't create an AMM pool where the token mints are the same";
+    },
+    {
+      code: 6006;
+      name: "swapSlippageExceeded";
+      msg: "A user wouldn't have gotten back their `output_amount_min`, reverting";
+    },
+    {
+      code: 6007;
+      name: "insufficientBalance";
+      msg: "The user had insufficient balance to do this";
+    },
+    {
+      code: 6008;
+      name: "zeroLiquidityRemove";
+      msg: "Must remove a non-zero amount of liquidity";
+    },
+    {
+      code: 6009;
+      name: "zeroLiquidityToAdd";
+      msg: "Cannot add liquidity with 0 tokens on either side";
+    },
+    {
+      code: 6010;
+      name: "zeroMinLpTokens";
+      msg: "Must specify a non-zero `min_lp_tokens` when adding to an existing pool";
+    },
+    {
+      code: 6011;
+      name: "addLiquiditySlippageExceeded";
+      msg: "LP wouldn't have gotten back `lp_token_min`";
+    },
+    {
+      code: 6012;
+      name: "addLiquidityMaxBaseExceeded";
+      msg: "LP would have spent more than `max_base_amount`";
+    },
+    {
+      code: 6013;
+      name: "insufficientQuoteAmount";
+      msg: "`quote_amount` must be greater than 100000000 when initializing a pool";
+    },
+    {
+      code: 6014;
+      name: "zeroSwapAmount";
+      msg: "Users must swap a non-zero amount";
+    },
+    {
+      code: 6015;
+      name: "constantProductInvariantFailed";
+      msg: "K should always be increasing";
+    },
+    {
+      code: 6016;
+      name: "castingOverflow";
+      msg: "Casting has caused an overflow";
+    },
+    {
+      code: 6017;
+      name: "invalidSupply";
+      msg: "The pool has an invalid supply";
+    },
+    {
+      code: 6018;
+      name: "invalidMintAuthority";
+      msg: "The pool has an invalid mint authority";
+    },
+    {
+      code: 6019;
+      name: "buyDisabled";
+      msg: "The pool disabled buying";
+    },
+    {
+      code: 6020;
+      name: "sellDisabled";
+      msg: "The pool disabled selling";
+    }
+  ];
+  types: [
+    {
+      name: "amm";
+      serialization: "bytemuckunsafe";
+      repr: {
+        kind: "rust";
+        packed: true;
+      };
       type: {
         kind: "struct";
         fields: [
@@ -230,11 +343,11 @@ export type Amm = {
           },
           {
             name: "baseMint";
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "quoteMint";
-            type: "publicKey";
+            type: "pubkey";
           },
           {
             name: "baseMintDecimals";
@@ -270,24 +383,22 @@ export type Amm = {
           },
           {
             name: "vaultStatus";
-            type: {
-              defined: "VaultStatus";
-            };
+            type: "u8";
           }
         ];
       };
-    }
-  ];
-  types: [
+    },
     {
-      name: "SwapArgs";
+      name: "swapArgs";
       type: {
         kind: "struct";
         fields: [
           {
             name: "swapType";
             type: {
-              defined: "SwapType";
+              defined: {
+                name: "swapType";
+              };
             };
           },
           {
@@ -302,586 +413,18 @@ export type Amm = {
       };
     },
     {
-      name: "SwapType";
+      name: "swapType";
       type: {
         kind: "enum";
         variants: [
           {
-            name: "Buy";
+            name: "buy";
           },
           {
-            name: "Sell";
-          }
-        ];
-      };
-    },
-    {
-      name: "VaultStatus";
-      type: {
-        kind: "enum";
-        variants: [
-          {
-            name: "Active";
-          },
-          {
-            name: "Finalized";
-          },
-          {
-            name: "Reverted";
+            name: "sell";
           }
         ];
       };
     }
   ];
-  errors: [
-    {
-      code: 6000;
-      name: "NoSlotsPassed";
-      msg: "Can't get a TWAP before some observations have been stored";
-    },
-    {
-      code: 6001;
-      name: "NoReserves";
-      msg: "Can't swap through a pool without token reserves on either side";
-    },
-    {
-      code: 6002;
-      name: "InputAmountOverflow";
-      msg: "Input token amount is too large for a swap, causes overflow";
-    },
-    {
-      code: 6003;
-      name: "AddLiquidityCalculationError";
-      msg: "Add liquidity calculation error";
-    },
-    {
-      code: 6004;
-      name: "DecimalScaleError";
-      msg: "Error in decimal scale conversion";
-    },
-    {
-      code: 6005;
-      name: "SameTokenMints";
-      msg: "You can't create an AMM pool where the token mints are the same";
-    },
-    {
-      code: 6006;
-      name: "SwapSlippageExceeded";
-      msg: "A user wouldn't have gotten back their `output_amount_min`, reverting";
-    },
-    {
-      code: 6007;
-      name: "InsufficientBalance";
-      msg: "The user had insufficient balance to do this";
-    },
-    {
-      code: 6008;
-      name: "ZeroLiquidityRemove";
-      msg: "Must remove a non-zero amount of liquidity";
-    },
-    {
-      code: 6009;
-      name: "ZeroLiquidityToAdd";
-      msg: "Cannot add liquidity with 0 tokens on either side";
-    },
-    {
-      code: 6010;
-      name: "ZeroMinLpTokens";
-      msg: "Must specify a non-zero `min_lp_tokens` when adding to an existing pool";
-    },
-    {
-      code: 6011;
-      name: "AddLiquiditySlippageExceeded";
-      msg: "LP wouldn't have gotten back `lp_token_min`";
-    },
-    {
-      code: 6012;
-      name: "AddLiquidityMaxBaseExceeded";
-      msg: "LP would have spent more than `max_base_amount`";
-    },
-    {
-      code: 6013;
-      name: "InsufficientQuoteAmount";
-      msg: "`quote_amount` must be greater than 100000000 when initializing a pool";
-    },
-    {
-      code: 6014;
-      name: "ZeroSwapAmount";
-      msg: "Users must swap a non-zero amount";
-    },
-    {
-      code: 6015;
-      name: "ConstantProductInvariantFailed";
-      msg: "K should always be increasing";
-    },
-    {
-      code: 6016;
-      name: "CastingOverflow";
-      msg: "Casting has caused an overflow";
-    },
-    {
-      code: 6017;
-      name: "InvalidSupply";
-      msg: "The pool has an invalid supply";
-    },
-    {
-      code: 6018;
-      name: "InvalidMintAuthority";
-      msg: "The pool has an invalid mint authority";
-    },
-    {
-      code: 6019;
-      name: "BuyDisabled";
-      msg: "The pool disabled buying";
-    },
-    {
-      code: 6020;
-      name: "SellDisabled";
-      msg: "The pool disabled selling";
-    }
-  ];
-};
-
-export const IDL: Amm = {
-  version: "0.3.0",
-  name: "amm",
-  instructions: [
-    {
-      name: "createAmm",
-      accounts: [
-        {
-          name: "user",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "amm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "baseMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "quoteMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "vaultAtaBase",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultAtaQuote",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "baseTokenMetadata",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "metadataProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "rent",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "pof",
-          type: "string",
-        },
-        {
-          name: "uri",
-          type: "string",
-        },
-        {
-          name: "proposalNumber",
-          type: "u16",
-        },
-        {
-          name: "symbol",
-          type: "string",
-        },
-      ],
-    },
-    {
-      name: "swap",
-      accounts: [
-        {
-          name: "user",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "amm",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userBaseAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultAtaBase",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultAtaQuote",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "token2022Program",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "baseMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "quoteMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "raydiumCpSwapProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "ammConfig",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "authority",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "poolAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "associatedTokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "systemProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "rent",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "token0Vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "token1Vault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "createLpAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "createPoolFee",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "observationKey",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "lpMint",
-          isMut: true,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "SwapArgs",
-          },
-        },
-      ],
-    },
-  ],
-  accounts: [
-    {
-      name: "amm",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "bump",
-            type: "u8",
-          },
-          {
-            name: "createdAtSlot",
-            type: "u64",
-          },
-          {
-            name: "baseMint",
-            type: "publicKey",
-          },
-          {
-            name: "quoteMint",
-            type: "publicKey",
-          },
-          {
-            name: "baseMintDecimals",
-            type: "u8",
-          },
-          {
-            name: "quoteMintDecimals",
-            type: "u8",
-          },
-          {
-            name: "baseAmount",
-            type: "u64",
-          },
-          {
-            name: "quoteAmount",
-            type: "u64",
-          },
-          {
-            name: "vQuoteReserves",
-            type: "u64",
-          },
-          {
-            name: "vBaseReserves",
-            type: "u64",
-          },
-          {
-            name: "quoteReserves",
-            type: "u64",
-          },
-          {
-            name: "baseReserves",
-            type: "u64",
-          },
-          {
-            name: "vaultStatus",
-            type: {
-              defined: "VaultStatus",
-            },
-          },
-        ],
-      },
-    },
-  ],
-  types: [
-    {
-      name: "SwapArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "swapType",
-            type: {
-              defined: "SwapType",
-            },
-          },
-          {
-            name: "inputAmount",
-            type: "u64",
-          },
-          {
-            name: "outputAmountMin",
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "SwapType",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Buy",
-          },
-          {
-            name: "Sell",
-          },
-        ],
-      },
-    },
-    {
-      name: "VaultStatus",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Active",
-          },
-          {
-            name: "Finalized",
-          },
-          {
-            name: "Reverted",
-          },
-        ],
-      },
-    },
-  ],
-  errors: [
-    {
-      code: 6000,
-      name: "NoSlotsPassed",
-      msg: "Can't get a TWAP before some observations have been stored",
-    },
-    {
-      code: 6001,
-      name: "NoReserves",
-      msg: "Can't swap through a pool without token reserves on either side",
-    },
-    {
-      code: 6002,
-      name: "InputAmountOverflow",
-      msg: "Input token amount is too large for a swap, causes overflow",
-    },
-    {
-      code: 6003,
-      name: "AddLiquidityCalculationError",
-      msg: "Add liquidity calculation error",
-    },
-    {
-      code: 6004,
-      name: "DecimalScaleError",
-      msg: "Error in decimal scale conversion",
-    },
-    {
-      code: 6005,
-      name: "SameTokenMints",
-      msg: "You can't create an AMM pool where the token mints are the same",
-    },
-    {
-      code: 6006,
-      name: "SwapSlippageExceeded",
-      msg: "A user wouldn't have gotten back their `output_amount_min`, reverting",
-    },
-    {
-      code: 6007,
-      name: "InsufficientBalance",
-      msg: "The user had insufficient balance to do this",
-    },
-    {
-      code: 6008,
-      name: "ZeroLiquidityRemove",
-      msg: "Must remove a non-zero amount of liquidity",
-    },
-    {
-      code: 6009,
-      name: "ZeroLiquidityToAdd",
-      msg: "Cannot add liquidity with 0 tokens on either side",
-    },
-    {
-      code: 6010,
-      name: "ZeroMinLpTokens",
-      msg: "Must specify a non-zero `min_lp_tokens` when adding to an existing pool",
-    },
-    {
-      code: 6011,
-      name: "AddLiquiditySlippageExceeded",
-      msg: "LP wouldn't have gotten back `lp_token_min`",
-    },
-    {
-      code: 6012,
-      name: "AddLiquidityMaxBaseExceeded",
-      msg: "LP would have spent more than `max_base_amount`",
-    },
-    {
-      code: 6013,
-      name: "InsufficientQuoteAmount",
-      msg: "`quote_amount` must be greater than 100000000 when initializing a pool",
-    },
-    {
-      code: 6014,
-      name: "ZeroSwapAmount",
-      msg: "Users must swap a non-zero amount",
-    },
-    {
-      code: 6015,
-      name: "ConstantProductInvariantFailed",
-      msg: "K should always be increasing",
-    },
-    {
-      code: 6016,
-      name: "CastingOverflow",
-      msg: "Casting has caused an overflow",
-    },
-    {
-      code: 6017,
-      name: "InvalidSupply",
-      msg: "The pool has an invalid supply",
-    },
-    {
-      code: 6018,
-      name: "InvalidMintAuthority",
-      msg: "The pool has an invalid mint authority",
-    },
-    {
-      code: 6019,
-      name: "BuyDisabled",
-      msg: "The pool disabled buying",
-    },
-    {
-      code: 6020,
-      name: "SellDisabled",
-      msg: "The pool disabled selling",
-    },
-  ],
 };

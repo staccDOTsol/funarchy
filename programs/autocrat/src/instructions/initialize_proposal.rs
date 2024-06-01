@@ -25,13 +25,13 @@ pub struct InitializeProposal<'info> {
     #[account(mut)]
     pub dao: Box<Account<'info, Dao>>,
     #[account(
-        constraint = fail_amm.quote_mint == dao.token_mint,
+        constraint = fail_amm.load()?.quote_mint == dao.token_mint,
     )]
-    pub fail_amm: Box<Account<'info, Amm>>,
+    pub fail_amm: AccountLoader<'info, Amm>,
     #[account(
-        constraint = pass_amm.quote_mint == dao.token_mint,
+        constraint = pass_amm.load()?.quote_mint == dao.token_mint,
     )]
-    pub pass_amm: Box<Account<'info, Amm>>,
+    pub pass_amm: AccountLoader<'info, Amm>,
     #[account(mut)]
     pub proposer: Signer<'info>,
     pub system_program: Program<'info, System>,
@@ -44,7 +44,7 @@ impl InitializeProposal<'_> {
         for amm in [&self.pass_amm, &self.fail_amm] {
             // an attacker is able to crank 5 observations before a proposal starts
             require!(
-                clock.slot < amm.created_at_slot + (50 * ONE_MINUTE_IN_SLOTS),
+                clock.slot < amm.load()?.created_at_slot + (50 * ONE_MINUTE_IN_SLOTS),
                 AutocratError::AmmTooOld
             );
         }

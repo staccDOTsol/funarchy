@@ -1,8 +1,8 @@
 import { Autocrat } from "./autocrat";
-export { Autocrat, IDL as AutocratIDL } from "./autocrat";
+export { Autocrat, Autocrat as AutocratIDL } from "./autocrat";
 
 import { Amm } from "./amm";
-export { Amm, IDL as AmmIDL } from "./amm";
+export { Amm, Amm as AmmIDL } from "./amm";
 
 import { ConditionalVault } from "./conditional_vault";
 export {
@@ -15,9 +15,9 @@ export { LowercaseKeys } from "./utils";
 import type { IdlAccounts, IdlTypes } from "@coral-xyz/anchor";
 import { PublicKey } from "@solana/web3.js";
 
-export type InitializeDaoParams = IdlTypes<Autocrat>["InitializeDaoParams"];
-export type UpdateDaoParams = IdlTypes<Autocrat>["UpdateDaoParams"];
-export type ProposalInstruction = IdlTypes<Autocrat>["ProposalInstruction"];
+export type InitializeDaoParams = any;
+export type UpdateDaoParams = any;
+export type ProposalInstruction = any;
 
 export type Proposal = IdlAccounts<Autocrat>["proposal"];
 export type ProposalWrapper = {
@@ -30,5 +30,4 @@ export type ProposalAccount = IdlAccounts<Autocrat>["proposal"];
 
 export type AmmAccount = IdlAccounts<Amm>["amm"];
 
-export type ConditionalVaultAccount =
-  IdlAccounts<ConditionalVault>["conditionalVault"];
+export type ConditionalVaultAccount = IdlAccounts<any>["conditionalVault"];

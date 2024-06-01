@@ -14,7 +14,7 @@ export class PDAGenerator {
   generateMetaDAOPDAAddress(): AddressAndBump {
     return anchor.web3.PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("WWCACOTMICMIBMHAFTTWYGHMB")],
-      this.program.programId
+      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
     );
   }
 
@@ -24,14 +24,14 @@ export class PDAGenerator {
         anchor.utils.bytes.utf8.encode("member"),
         anchor.utils.bytes.utf8.encode(name),
       ],
-      this.program.programId
+      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
     );
   }
 
   generateTreasuryPDAAddress(memberAddress: PublicKey): AddressAndBump {
     return anchor.web3.PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("treasury"), memberAddress.toBuffer()],
-      this.program.programId
+      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
     );
   }
 
@@ -45,7 +45,7 @@ export class PDAGenerator {
         proposal.toBuffer(),
         Buffer.from([redeemableOnPass]),
       ],
-      this.program.programId
+      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
     );
   }
 
@@ -59,7 +59,7 @@ export class PDAGenerator {
         conditionalExpressionAddress.toBuffer(),
         underlyingMint.toBuffer(),
       ],
-      this.program.programId
+      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
     );
   }
 
@@ -73,7 +73,7 @@ export class PDAGenerator {
         conditionalVault.toBuffer(),
         user.toBuffer(),
       ],
-      this.program.programId
+      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
     );
   }
 }

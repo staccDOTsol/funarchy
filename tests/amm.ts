@@ -46,7 +46,7 @@ describe("amm", async function () {
     );
 
     provider = new AnchorProvider(connection, new anchor.Wallet(payer), {})
-    ammClient = await AmmClient.createClient({ provider });
+    ammClient = await AmmClient.createClient({ provider, ammProgramId: new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj") });
   });
 
   beforeEach(async function () {

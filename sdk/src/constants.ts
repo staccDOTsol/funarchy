@@ -4,7 +4,7 @@ export const AUTOCRAT_PROGRAM_ID = new PublicKey(
   "J7MpMtBj4WVNJ7MQxFj8owfjXAe7BmmdoGgMuh8xMuMU"
 );
 export const AMM_PROGRAM_ID = new PublicKey(
-  "GQFQqovdVdjmCCj5KoTsuurJU6cqg5PZ7kwihb2mvPoo"
+  "6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj"
 );
 export const CONDITIONAL_VAULT_PROGRAM_ID = new PublicKey(
   "VAU1T7S5UuEHmMvXtXMVmpEoQtZ2ya7eRb7gcN47wDp"
