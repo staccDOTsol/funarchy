@@ -9,7 +9,6 @@ import {
   TransactionMessage,
   VersionedTransaction,
 } from "@solana/web3.js";
-import { BanksClient } from "solana-bankrun";
 import { addComputeUnits, addPriorityFee } from "./utils";
 import { AmmClient } from "./AmmClient";
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
@@ -117,17 +116,6 @@ export class InstructionHandler<
   ): InstructionHandler<ProgramType, Type> {
     this.microLamportsPerComputeUnit = microLamportsPerComputeUnit;
     return this;
-  }
-
-  async bankrun(banksClient: BanksClient) {
-    try {
-      let [blockhash] = (await banksClient.getLatestBlockhash())!;
-      const tx = await this.getVersionedTransaction(blockhash);
-      return await banksClient.processTransaction(tx);
-    } catch (e) {
-      console.log(e);
-      throw e;
-    }
   }
 
   async rpc(opts: ConfirmOptions = { skipPreflight: true }) {

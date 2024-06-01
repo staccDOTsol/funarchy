@@ -1,4 +1,4 @@
-import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
+import { AnchorProvider, IdlTypes, Program, Wallet } from "@coral-xyz/anchor";
 import {
   AccountMeta,
   AddressLookupTableAccount,
@@ -9,6 +9,7 @@ import {
   Transaction,
   TransactionInstruction,
 } from "@solana/web3.js";
+import { Keypair as kp } from "@metaplex-foundation/umi";
 import { PriceMath } from "./utils/priceMath";
 import { ProposalInstruction, InitializeDaoParams } from "./types";
 
@@ -37,6 +38,7 @@ import {
   getVaultAddr,
   getVaultFinalizeMintAddr,
   getVaultRevertMintAddr,
+  uploadConditionalTokenMetadataJson,
 } from "./utils";
 import { ConditionalVaultClient } from "./ConditionalVaultClient";
 import { AmmClient } from "./AmmClient";
@@ -45,6 +47,7 @@ import {
   getAssociatedTokenAddressSync,
   unpackMint,
 } from "@solana/spl-token";
+import { keypairIdentity } from "@metaplex-foundation/umi";
 
 export type CreateClientParams = {
   provider: AnchorProvider;
@@ -227,16 +230,7 @@ export class AutocratClient {
         slotsPerProposal: null,
       },
       usdcMint
-    )
-      .postInstructions([
-        ComputeBudgetProgram.setComputeUnitLimit({
-          units: MaxCUs.initializeDao,
-        }),
-        ComputeBudgetProgram.setComputeUnitPrice({
-          microLamports: DEFAULT_CU_PRICE,
-        }),
-      ])
-      .rpc({ maxRetries: 5 });
+    ).rpc({ maxRetries: 5 });
 
     return daoKeypair.publicKey;
   }
@@ -249,6 +243,11 @@ export class AutocratClient {
   ) {
     return this.autocrat.methods
       .initializeDao(params)
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666,
+        }),
+      ])
       .accounts({
         dao: daoKeypair.publicKey,
         tokenMint,
@@ -289,6 +288,36 @@ export class AutocratClient {
       storedDao.usdcMint,
       dao
     );
+    const payer = Keypair.fromSecretKey(
+      new Uint8Array(
+        JSON.parse(
+          require("fs").readFileSync(
+            "/Users/jd/.config/solana/id.json",
+            "utf-8"
+          )
+        )
+      )
+    );
+    const passUri = await uploadConditionalTokenMetadataJson(
+      this.provider.connection,
+      keypairIdentity({
+        secretKey: payer.secretKey,
+        // @ts-ignore
+        publicKey: payer.publicKey,
+      }),
+      nonce.toNumber(),
+      "pStacc"
+    );
+    const failUri = await uploadConditionalTokenMetadataJson(
+      this.provider.connection,
+      keypairIdentity({
+        secretKey: payer.secretKey,
+        // @ts-ignore
+        publicKey: payer.publicKey,
+      }),
+      nonce.toNumber(),
+      "fStacc"
+    );
 
     // it's important that these happen in a single atomic transaction
     await this.vaultClient
@@ -296,17 +325,22 @@ export class AutocratClient {
       .postInstructions(
         await InstructionUtils.getInstructions(
           this.vaultClient.initializeVaultIx(proposal, storedDao.usdcMint),
-          this.ammClient.createAmmIx(
+          await this.ammClient.createAmmIx(
             passBaseMint,
             passQuoteMint,
-            storedDao.twapInitialObservation,
-            storedDao.twapMaxObservationChangePerUpdate
+            "p",
+            passUri,
+            nonce.toNumber(),
+            "USDC"
           ),
-          this.ammClient.createAmmIx(
+          await this.ammClient.createAmmIx(
             failBaseMint,
             failQuoteMint,
-            storedDao.twapInitialObservation,
-            storedDao.twapMaxObservationChangePerUpdate
+            "f",
+            failUri,
+            nonce.toNumber(),
+
+            "USDC"
           )
         )
       )
@@ -320,29 +354,6 @@ export class AutocratClient {
             quoteVault,
             storedDao.usdcMint,
             quoteTokensToLP
-          )
-        )
-      )
-      .rpc();
-
-    await this.ammClient
-      .addLiquidityIx(
-        passAmm,
-        passBaseMint,
-        passQuoteMint,
-        quoteTokensToLP,
-        baseTokensToLP,
-        new BN(0)
-      )
-      .postInstructions(
-        await InstructionUtils.getInstructions(
-          this.ammClient.addLiquidityIx(
-            failAmm,
-            failBaseMint,
-            failQuoteMint,
-            quoteTokensToLP,
-            baseTokensToLP,
-            new BN(0)
           )
         )
       )
@@ -416,25 +427,16 @@ export class AutocratClient {
         failLpTokensToLock,
         nonce,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666,
+        }),
+      ])
       .accounts({
         proposal,
         dao,
-        baseVault,
-        quoteVault,
         passAmm,
         failAmm,
-        passLpMint: passLp,
-        failLpMint: failLp,
-        passLpUserAccount: getAssociatedTokenAddressSync(
-          passLp,
-          this.provider.publicKey
-        ),
-        failLpUserAccount: getAssociatedTokenAddressSync(
-          failLp,
-          this.provider.publicKey
-        ),
-        passLpVaultAccount,
-        failLpVaultAccount,
         proposer: this.provider.publicKey,
       })
       .preInstructions([
@@ -494,28 +496,20 @@ export class AutocratClient {
       failAmm
     );
 
-    return this.autocrat.methods.finalizeProposal().accounts({
-      proposal,
-      passAmm,
-      failAmm,
-      dao,
-      baseVault,
-      quoteVault,
-      passLpUserAccount: getAssociatedTokenAddressSync(passLp, proposer),
-      failLpUserAccount: getAssociatedTokenAddressSync(failLp, proposer),
-      passLpVaultAccount: getAssociatedTokenAddressSync(
-        passLp,
-        daoTreasury,
-        true
-      ),
-      failLpVaultAccount: getAssociatedTokenAddressSync(
-        failLp,
-        daoTreasury,
-        true
-      ),
-      vaultProgram: this.vaultClient.vaultProgram.programId,
-      treasury: daoTreasury,
-    });
+    return this.autocrat.methods
+      .finalizeProposal()
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666,
+        }),
+      ])
+      .accounts({
+        proposal,
+        passAmm,
+        failAmm,
+        dao,
+        treasury: daoTreasury,
+      });
   }
 
   async executeProposal(proposal: PublicKey) {
@@ -532,6 +526,11 @@ export class AutocratClient {
     const [daoTreasury] = getDaoTreasuryAddr(this.autocrat.programId, dao);
     return this.autocrat.methods
       .executeProposal()
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666,
+        }),
+      ])
       .accounts({
         proposal,
         dao,
@@ -569,10 +568,6 @@ export class AutocratClient {
 
     while (true) {
       let ixs: TransactionInstruction[] = [];
-
-      for (const amm of amms) {
-        ixs.push(await this.ammClient.crankThatTwapIx(amm).instruction());
-      }
 
       let tx = new Transaction();
       tx.add(

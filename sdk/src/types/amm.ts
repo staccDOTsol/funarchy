@@ -16,13 +16,8 @@ export type Amm = {
           isSigner: false;
         },
         {
-          name: "lpMint";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "baseMint";
-          isMut: false;
+          isMut: true;
           isSigner: false;
         },
         {
@@ -54,130 +49,39 @@ export type Amm = {
           name: "systemProgram";
           isMut: false;
           isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "args";
-          type: {
-            defined: "CreateAmmArgs";
-          };
-        }
-      ];
-    },
-    {
-      name: "addLiquidity";
-      accounts: [
-        {
-          name: "user";
-          isMut: true;
-          isSigner: true;
         },
         {
-          name: "amm";
+          name: "baseTokenMetadata";
           isMut: true;
           isSigner: false;
         },
         {
-          name: "lpMint";
-          isMut: true;
+          name: "metadataProgram";
+          isMut: false;
           isSigner: false;
         },
         {
-          name: "userLpAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "userBaseAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "userQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "vaultAtaBase";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "vaultAtaQuote";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
+          name: "rent";
           isMut: false;
           isSigner: false;
         }
       ];
       args: [
         {
-          name: "args";
-          type: {
-            defined: "AddLiquidityArgs";
-          };
-        }
-      ];
-    },
-    {
-      name: "removeLiquidity";
-      accounts: [
-        {
-          name: "user";
-          isMut: true;
-          isSigner: true;
+          name: "pof";
+          type: "string";
         },
         {
-          name: "amm";
-          isMut: true;
-          isSigner: false;
+          name: "uri";
+          type: "string";
         },
         {
-          name: "lpMint";
-          isMut: true;
-          isSigner: false;
+          name: "proposalNumber";
+          type: "u16";
         },
         {
-          name: "userLpAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "userBaseAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "userQuoteAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "vaultAtaBase";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "vaultAtaQuote";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        }
-      ];
-      args: [
-        {
-          name: "args";
-          type: {
-            defined: "RemoveLiquidityArgs";
-          };
+          name: "symbol";
+          type: "string";
         }
       ];
     },
@@ -218,6 +122,86 @@ export type Amm = {
           name: "tokenProgram";
           isMut: false;
           isSigner: false;
+        },
+        {
+          name: "token2022Program";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "baseMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "quoteMint";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "raydiumCpSwapProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "ammConfig";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "authority";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "poolAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "associatedTokenProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "systemProgram";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "rent";
+          isMut: false;
+          isSigner: false;
+        },
+        {
+          name: "token0Vault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "token1Vault";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "createLpAccount";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "createPoolFee";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "observationKey";
+          isMut: true;
+          isSigner: false;
+        },
+        {
+          name: "lpMint";
+          isMut: true;
+          isSigner: false;
         }
       ];
       args: [
@@ -228,17 +212,6 @@ export type Amm = {
           };
         }
       ];
-    },
-    {
-      name: "crankThatTwap";
-      accounts: [
-        {
-          name: "amm";
-          isMut: true;
-          isSigner: false;
-        }
-      ];
-      args: [];
     }
   ];
   accounts: [
@@ -254,10 +227,6 @@ export type Amm = {
           {
             name: "createdAtSlot";
             type: "u64";
-          },
-          {
-            name: "lpMint";
-            type: "publicKey";
           },
           {
             name: "baseMint";
@@ -284,9 +253,37 @@ export type Amm = {
             type: "u64";
           },
           {
-            name: "oracle";
+            name: "vQuoteReserves";
+            type: "u64";
+          },
+          {
+            name: "vBaseReserves";
+            type: "u64";
+          },
+          {
+            name: "quoteReserves";
+            type: "u64";
+          },
+          {
+            name: "baseReserves";
+            type: "u64";
+          },
+          {
+            name: "vaultStatus";
             type: {
-              defined: "TwapOracle";
+              defined: "VaultStatus";
+            };
+          },
+          {
+            name: "buffer";
+            type: {
+              array: ["u64", 8];
+            };
+          },
+          {
+            name: "buffer2";
+            type: {
+              array: ["u64", 8];
             };
           }
         ];
@@ -294,65 +291,6 @@ export type Amm = {
     }
   ];
   types: [
-    {
-      name: "AddLiquidityArgs";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "quoteAmount";
-            docs: ["How much quote token you will deposit to the pool"];
-            type: "u64";
-          },
-          {
-            name: "maxBaseAmount";
-            docs: ["The maximum base token you will deposit to the pool"];
-            type: "u64";
-          },
-          {
-            name: "minLpTokens";
-            docs: ["The minimum LP token you will get back"];
-            type: "u64";
-          }
-        ];
-      };
-    },
-    {
-      name: "CreateAmmArgs";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "twapInitialObservation";
-            type: "u128";
-          },
-          {
-            name: "twapMaxObservationChangePerUpdate";
-            type: "u128";
-          }
-        ];
-      };
-    },
-    {
-      name: "RemoveLiquidityArgs";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "lpTokensToBurn";
-            type: "u64";
-          },
-          {
-            name: "minQuoteAmount";
-            type: "u64";
-          },
-          {
-            name: "minBaseAmount";
-            type: "u64";
-          }
-        ];
-      };
-    },
     {
       name: "SwapArgs";
       type: {
@@ -376,67 +314,6 @@ export type Amm = {
       };
     },
     {
-      name: "TwapOracle";
-      type: {
-        kind: "struct";
-        fields: [
-          {
-            name: "lastUpdatedSlot";
-            type: "u64";
-          },
-          {
-            name: "lastPrice";
-            docs: [
-              "A price is the number of quote units per base unit multiplied by 1e12.",
-              "You cannot simply divide by 1e12 to get a price you can display in the UI",
-              "because the base and quote decimals may be different. Instead, do:",
-              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12"
-            ];
-            type: "u128";
-          },
-          {
-            name: "lastObservation";
-            docs: [
-              "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
-              "a few extremely large outliers. So we use observations, which can only move",
-              "by `max_observation_change_per_update` per update."
-            ];
-            type: "u128";
-          },
-          {
-            name: "aggregator";
-            docs: [
-              "Running sum of slots_per_last_update * last_observation.",
-              "",
-              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
-              "we can store 18 million slots worth of observations, which turns out to",
-              "be ~85 days worth of slots.",
-              "",
-              "Assuming that latest observations are 100x smaller than they could theoretically",
-              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
-              "very conservative assumption - META/USDC prices should be between 1e9 and",
-              "1e15, which would overflow after 1e15 years worth of slots.",
-              "",
-              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
-              "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at t2 being smaller than an aggregator at t1."
-            ];
-            type: "u128";
-          },
-          {
-            name: "maxObservationChangePerUpdate";
-            docs: ["The most that an observation can change per update."];
-            type: "u128";
-          },
-          {
-            name: "initialObservation";
-            docs: ["What the initial `latest_observation` is set to."];
-            type: "u128";
-          }
-        ];
-      };
-    },
-    {
       name: "SwapType";
       type: {
         kind: "enum";
@@ -446,6 +323,23 @@ export type Amm = {
           },
           {
             name: "Sell";
+          }
+        ];
+      };
+    },
+    {
+      name: "VaultStatus";
+      type: {
+        kind: "enum";
+        variants: [
+          {
+            name: "Active";
+          },
+          {
+            name: "Finalized";
+          },
+          {
+            name: "Reverted";
           }
         ];
       };
@@ -536,6 +430,26 @@ export type Amm = {
       code: 6016;
       name: "CastingOverflow";
       msg: "Casting has caused an overflow";
+    },
+    {
+      code: 6017;
+      name: "InvalidSupply";
+      msg: "The pool has an invalid supply";
+    },
+    {
+      code: 6018;
+      name: "InvalidMintAuthority";
+      msg: "The pool has an invalid mint authority";
+    },
+    {
+      code: 6019;
+      name: "BuyDisabled";
+      msg: "The pool disabled buying";
+    },
+    {
+      code: 6020;
+      name: "SellDisabled";
+      msg: "The pool disabled selling";
     }
   ];
 };
@@ -558,13 +472,8 @@ export const IDL: Amm = {
           isSigner: false,
         },
         {
-          name: "lpMint",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "baseMint",
-          isMut: false,
+          isMut: true,
           isSigner: false,
         },
         {
@@ -597,129 +506,38 @@ export const IDL: Amm = {
           isMut: false,
           isSigner: false,
         },
-      ],
-      args: [
         {
-          name: "args",
-          type: {
-            defined: "CreateAmmArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "addLiquidity",
-      accounts: [
-        {
-          name: "user",
-          isMut: true,
-          isSigner: true,
-        },
-        {
-          name: "amm",
+          name: "baseTokenMetadata",
           isMut: true,
           isSigner: false,
         },
         {
-          name: "lpMint",
-          isMut: true,
+          name: "metadataProgram",
+          isMut: false,
           isSigner: false,
         },
         {
-          name: "userLpAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userBaseAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultAtaBase",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultAtaQuote",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
+          name: "rent",
           isMut: false,
           isSigner: false,
         },
       ],
       args: [
         {
-          name: "args",
-          type: {
-            defined: "AddLiquidityArgs",
-          },
-        },
-      ],
-    },
-    {
-      name: "removeLiquidity",
-      accounts: [
-        {
-          name: "user",
-          isMut: true,
-          isSigner: true,
+          name: "pof",
+          type: "string",
         },
         {
-          name: "amm",
-          isMut: true,
-          isSigner: false,
+          name: "uri",
+          type: "string",
         },
         {
-          name: "lpMint",
-          isMut: true,
-          isSigner: false,
+          name: "proposalNumber",
+          type: "u16",
         },
         {
-          name: "userLpAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userBaseAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "userQuoteAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultAtaBase",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "vaultAtaQuote",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: "RemoveLiquidityArgs",
-          },
+          name: "symbol",
+          type: "string",
         },
       ],
     },
@@ -761,6 +579,86 @@ export const IDL: Amm = {
           isMut: false,
           isSigner: false,
         },
+        {
+          name: "token2022Program",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "baseMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "quoteMint",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "raydiumCpSwapProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "ammConfig",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "authority",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "poolAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "associatedTokenProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "systemProgram",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "rent",
+          isMut: false,
+          isSigner: false,
+        },
+        {
+          name: "token0Vault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "token1Vault",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "createLpAccount",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "createPoolFee",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "observationKey",
+          isMut: true,
+          isSigner: false,
+        },
+        {
+          name: "lpMint",
+          isMut: true,
+          isSigner: false,
+        },
       ],
       args: [
         {
@@ -770,17 +668,6 @@ export const IDL: Amm = {
           },
         },
       ],
-    },
-    {
-      name: "crankThatTwap",
-      accounts: [
-        {
-          name: "amm",
-          isMut: true,
-          isSigner: false,
-        },
-      ],
-      args: [],
     },
   ],
   accounts: [
@@ -796,10 +683,6 @@ export const IDL: Amm = {
           {
             name: "createdAtSlot",
             type: "u64",
-          },
-          {
-            name: "lpMint",
-            type: "publicKey",
           },
           {
             name: "baseMint",
@@ -826,9 +709,37 @@ export const IDL: Amm = {
             type: "u64",
           },
           {
-            name: "oracle",
+            name: "vQuoteReserves",
+            type: "u64",
+          },
+          {
+            name: "vBaseReserves",
+            type: "u64",
+          },
+          {
+            name: "quoteReserves",
+            type: "u64",
+          },
+          {
+            name: "baseReserves",
+            type: "u64",
+          },
+          {
+            name: "vaultStatus",
             type: {
-              defined: "TwapOracle",
+              defined: "VaultStatus",
+            },
+          },
+          {
+            name: "buffer",
+            type: {
+              array: ["u64", 8],
+            },
+          },
+          {
+            name: "buffer2",
+            type: {
+              array: ["u64", 8],
             },
           },
         ],
@@ -836,65 +747,6 @@ export const IDL: Amm = {
     },
   ],
   types: [
-    {
-      name: "AddLiquidityArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "quoteAmount",
-            docs: ["How much quote token you will deposit to the pool"],
-            type: "u64",
-          },
-          {
-            name: "maxBaseAmount",
-            docs: ["The maximum base token you will deposit to the pool"],
-            type: "u64",
-          },
-          {
-            name: "minLpTokens",
-            docs: ["The minimum LP token you will get back"],
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "CreateAmmArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "twapInitialObservation",
-            type: "u128",
-          },
-          {
-            name: "twapMaxObservationChangePerUpdate",
-            type: "u128",
-          },
-        ],
-      },
-    },
-    {
-      name: "RemoveLiquidityArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "lpTokensToBurn",
-            type: "u64",
-          },
-          {
-            name: "minQuoteAmount",
-            type: "u64",
-          },
-          {
-            name: "minBaseAmount",
-            type: "u64",
-          },
-        ],
-      },
-    },
     {
       name: "SwapArgs",
       type: {
@@ -918,67 +770,6 @@ export const IDL: Amm = {
       },
     },
     {
-      name: "TwapOracle",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "lastUpdatedSlot",
-            type: "u64",
-          },
-          {
-            name: "lastPrice",
-            docs: [
-              "A price is the number of quote units per base unit multiplied by 1e12.",
-              "You cannot simply divide by 1e12 to get a price you can display in the UI",
-              "because the base and quote decimals may be different. Instead, do:",
-              "ui_price = (price * (10**(base_decimals - quote_decimals))) / 1e12",
-            ],
-            type: "u128",
-          },
-          {
-            name: "lastObservation",
-            docs: [
-              "If we did a raw TWAP over prices, someone could push the TWAP heavily with",
-              "a few extremely large outliers. So we use observations, which can only move",
-              "by `max_observation_change_per_update` per update.",
-            ],
-            type: "u128",
-          },
-          {
-            name: "aggregator",
-            docs: [
-              "Running sum of slots_per_last_update * last_observation.",
-              "",
-              "Assuming latest observations are as big as possible (u64::MAX * 1e12),",
-              "we can store 18 million slots worth of observations, which turns out to",
-              "be ~85 days worth of slots.",
-              "",
-              "Assuming that latest observations are 100x smaller than they could theoretically",
-              "be, we can store 8500 days (23 years) worth of them. Even this is a very",
-              "very conservative assumption - META/USDC prices should be between 1e9 and",
-              "1e15, which would overflow after 1e15 years worth of slots.",
-              "",
-              "So in the case of an overflow, the aggregator rolls back to 0. It's the",
-              "client's responsibility to sanity check the assets or to handle an",
-              "aggregator at t2 being smaller than an aggregator at t1.",
-            ],
-            type: "u128",
-          },
-          {
-            name: "maxObservationChangePerUpdate",
-            docs: ["The most that an observation can change per update."],
-            type: "u128",
-          },
-          {
-            name: "initialObservation",
-            docs: ["What the initial `latest_observation` is set to."],
-            type: "u128",
-          },
-        ],
-      },
-    },
-    {
       name: "SwapType",
       type: {
         kind: "enum",
@@ -988,6 +779,23 @@ export const IDL: Amm = {
           },
           {
             name: "Sell",
+          },
+        ],
+      },
+    },
+    {
+      name: "VaultStatus",
+      type: {
+        kind: "enum",
+        variants: [
+          {
+            name: "Active",
+          },
+          {
+            name: "Finalized",
+          },
+          {
+            name: "Reverted",
           },
         ],
       },
@@ -1078,6 +886,26 @@ export const IDL: Amm = {
       code: 6016,
       name: "CastingOverflow",
       msg: "Casting has caused an overflow",
+    },
+    {
+      code: 6017,
+      name: "InvalidSupply",
+      msg: "The pool has an invalid supply",
+    },
+    {
+      code: 6018,
+      name: "InvalidMintAuthority",
+      msg: "The pool has an invalid mint authority",
+    },
+    {
+      code: 6019,
+      name: "BuyDisabled",
+      msg: "The pool disabled buying",
+    },
+    {
+      code: 6020,
+      name: "SellDisabled",
+      msg: "The pool disabled selling",
     },
   ],
 };

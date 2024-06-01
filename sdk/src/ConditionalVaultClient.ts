@@ -1,5 +1,10 @@
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
-import { AddressLookupTableAccount, Keypair, PublicKey } from "@solana/web3.js";
+import {
+  AddressLookupTableAccount,
+  ComputeBudgetProgram,
+  Keypair,
+  PublicKey,
+} from "@solana/web3.js";
 
 import {
   ConditionalVault,
@@ -123,6 +128,11 @@ export class ConditionalVaultClient {
 
     let ix = this.vaultProgram.methods
       .mintConditionalTokens(amount)
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666,
+        }),
+      ])
       .accounts({
         authority: userPubkey,
         vault,
@@ -189,6 +199,11 @@ export class ConditionalVaultClient {
 
     return this.vaultProgram.methods
       .initializeConditionalVault({ settlementAuthority })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666,
+        }),
+      ])
       .accounts({
         vault,
         underlyingTokenMint,
@@ -238,6 +253,11 @@ export class ConditionalVaultClient {
         onFinalizeUri,
         onRevertUri,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666,
+        }),
+      ])
       .accounts({
         payer: this.provider.publicKey,
         vault,

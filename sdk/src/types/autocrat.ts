@@ -54,12 +54,7 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "quoteVault";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "baseVault";
+          name: "failAmm";
           isMut: false;
           isSigner: false;
         },
@@ -69,49 +64,9 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "passLpMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "failLpMint";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "failAmm";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "passLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "passLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "proposer";
           isMut: true;
           isSigner: true;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
         },
         {
           name: "systemProgram";
@@ -152,47 +107,7 @@ export type Autocrat = {
           isSigner: false;
         },
         {
-          name: "baseVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "quoteVault";
-          isMut: true;
-          isSigner: false;
-        },
-        {
           name: "treasury";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "passLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpUserAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "passLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "failLpVaultAccount";
-          isMut: true;
-          isSigner: false;
-        },
-        {
-          name: "tokenProgram";
-          isMut: false;
-          isSigner: false;
-        },
-        {
-          name: "vaultProgram";
           isMut: false;
           isSigner: false;
         }
@@ -355,14 +270,6 @@ export type Autocrat = {
           },
           {
             name: "failAmm";
-            type: "publicKey";
-          },
-          {
-            name: "baseVault";
-            type: "publicKey";
-          },
-          {
-            name: "quoteVault";
             type: "publicKey";
           },
           {
@@ -686,12 +593,7 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "quoteVault",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "baseVault",
+          name: "failAmm",
           isMut: false,
           isSigner: false,
         },
@@ -701,49 +603,9 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "passLpMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "failLpMint",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "failAmm",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "passLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "passLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "proposer",
           isMut: true,
           isSigner: true,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
         },
         {
           name: "systemProgram",
@@ -784,47 +646,7 @@ export const IDL: Autocrat = {
           isSigner: false,
         },
         {
-          name: "baseVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "quoteVault",
-          isMut: true,
-          isSigner: false,
-        },
-        {
           name: "treasury",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "passLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpUserAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "passLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "failLpVaultAccount",
-          isMut: true,
-          isSigner: false,
-        },
-        {
-          name: "tokenProgram",
-          isMut: false,
-          isSigner: false,
-        },
-        {
-          name: "vaultProgram",
           isMut: false,
           isSigner: false,
         },
@@ -987,14 +809,6 @@ export const IDL: Autocrat = {
           },
           {
             name: "failAmm",
-            type: "publicKey",
-          },
-          {
-            name: "baseVault",
-            type: "publicKey",
-          },
-          {
-            name: "quoteVault",
             type: "publicKey",
           },
           {

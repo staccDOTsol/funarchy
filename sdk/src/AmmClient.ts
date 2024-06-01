@@ -1,5 +1,14 @@
-import { AnchorProvider, IdlTypes, Program } from "@coral-xyz/anchor";
-import { AddressLookupTableAccount, Keypair, PublicKey } from "@solana/web3.js";
+import { AnchorProvider, IdlTypes, Program, utils } from "@coral-xyz/anchor";
+import {
+  AddressLookupTableAccount,
+  ComputeBudgetProgram,
+  Connection,
+  Keypair,
+  PublicKey,
+  SYSVAR_RENT_PUBKEY,
+  SystemProgram,
+  Transaction,
+} from "@solana/web3.js";
 
 import { Amm as AmmIDLType, IDL as AmmIDL } from "./types/amm";
 
@@ -13,10 +22,35 @@ import {
   unpackMint,
   getAssociatedTokenAddressSync,
   createAssociatedTokenAccountIdempotentInstruction,
+  TOKEN_PROGRAM_ID,
+  ASSOCIATED_TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
 import { PriceMath } from "./utils/priceMath";
+import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
 
 export type SwapType = LowercaseKeys<IdlTypes<AmmIDLType>["SwapType"]>;
+import {
+  Key,
+  MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
+} from "@metaplex-foundation/mpl-token-metadata";
+import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
+
+const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
+  UMI_MPL_TOKEN_METADATA_PROGRAM_ID
+);
+
+const findMetaplexMetadataPda = async (mint: PublicKey) => {
+  const [publicKey] = PublicKey.findProgramAddressSync(
+    [
+      utils.bytes.utf8.encode("metadata"),
+      MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
+      mint.toBuffer(),
+    ],
+    MPL_TOKEN_METADATA_PROGRAM_ID
+  );
+
+  return publicKey;
+};
 
 export type CreateAmmClientParams = {
   provider: AnchorProvider;
@@ -60,6 +94,12 @@ export class AmmClient {
     this.luts = luts;
   }
 
+  getTwap(amm: AmmAccount): BN {
+    const vQuoteReserves = new BN(amm.vQuoteReserves);
+    const vBaseReserves = new BN(amm.vBaseReserves);
+    const price = vQuoteReserves.mul(new BN(100)).div(vBaseReserves);
+    return price;
+  }
   public static createClient(
     createAutocratClientParams: CreateAmmClientParams
   ): AmmClient {
@@ -79,6 +119,9 @@ export class AmmClient {
     baseMint: PublicKey,
     quoteMint: PublicKey,
     twapInitialObservation: number,
+    passOrFail: string,
+    uri: string,
+    proposal_number: number,
     twapMaxObservationChangePerUpdate?: number
   ): Promise<PublicKey> {
     if (!twapMaxObservationChangePerUpdate) {
@@ -86,212 +129,86 @@ export class AmmClient {
     }
     let [amm] = getAmmAddr(this.getProgramId(), baseMint, quoteMint);
 
-    let baseDecimals = unpackMint(
-      baseMint,
-      await this.provider.connection.getAccountInfo(baseMint)
-    ).decimals;
-    let quoteDecimals = unpackMint(
-      quoteMint,
-      await this.provider.connection.getAccountInfo(quoteMint)
-    ).decimals;
-
-    let [twapFirstObservationScaled, twapMaxObservationChangePerUpdateScaled] =
-      PriceMath.getAmmPrices(
-        baseDecimals,
-        quoteDecimals,
-        twapInitialObservation,
-        twapMaxObservationChangePerUpdate
-      );
-
-    await this.createAmmIx(
-      baseMint,
-      quoteMint,
-      twapFirstObservationScaled,
-      twapMaxObservationChangePerUpdateScaled
-    ).rpc();
-
+    let hm = await (
+      await this.createAmmIx(
+        baseMint,
+        quoteMint,
+        passOrFail,
+        uri,
+        proposal_number,
+        "USDC"
+      )
+    ).instruction();
+    const tx = new Transaction().add(hm);
+    tx.feePayer = this.provider.publicKey;
+    tx.recentBlockhash = (
+      await new Connection(
+        process.env.ANCHOR_PROVIDER as string,
+        "confirmed"
+      ).getLatestBlockhash()
+    ).blockhash;
+    tx.sign(
+      Keypair.fromSecretKey(
+        new Uint8Array(
+          JSON.parse(
+            require("fs").readFileSync(
+              process.env.ANCHOR_WALLET as string,
+              "utf-8"
+            )
+          )
+        )
+      )
+    );
+    await new Connection(
+      process.env.ANCHOR_PROVIDER as string,
+      "confirmed"
+    ).sendRawTransaction(
+      tx.serialize({ requireAllSignatures: false, verifySignatures: false })
+    );
+    console.log("hm", hm);
     return amm;
   }
-
   // both twap values need to be scaled beforehand
-  createAmmIx(
+  async createAmmIx(
     baseMint: PublicKey,
     quoteMint: PublicKey,
-    twapInitialObservation: BN,
-    twapMaxObservationChangePerUpdate: BN
-  ): MethodsBuilder<AmmIDLType, any> {
+    passOrFail: string,
+    uri: string,
+    proposal_number: number,
+    symbol: string,
+    twapFirstObservationScaled?: BN,
+    twapMaxObservationChangePerUpdateScaled?: BN
+  ): Promise<MethodsBuilder<AmmIDLType, any>> {
     let [amm] = getAmmAddr(this.getProgramId(), baseMint, quoteMint);
-    let [lpMint] = getAmmLpMintAddr(this.getProgramId(), amm);
 
     let vaultAtaBase = getAssociatedTokenAddressSync(baseMint, amm, true);
     let vaultAtaQuote = getAssociatedTokenAddressSync(quoteMint, amm, true);
 
+    const baseTokenMetadata = await findMetaplexMetadataPda(baseMint);
+
     return this.program.methods
-      .createAmm({
-        twapInitialObservation,
-        twapMaxObservationChangePerUpdate,
-      })
+      .createAmm(passOrFail, uri, proposal_number, symbol)
+
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666,
+        }),
+      ])
       .accounts({
         user: this.provider.publicKey,
         amm,
-        lpMint,
         baseMint,
         quoteMint,
         vaultAtaBase,
         vaultAtaQuote,
-      });
-  }
-
-  async addLiquidity(
-    amm: PublicKey,
-    quoteAmount?: number,
-    baseAmount?: number
-  ) {
-    let storedAmm = await this.getAmm(amm);
-
-    let lpMintSupply = unpackMint(
-      storedAmm.lpMint,
-      await this.provider.connection.getAccountInfo(storedAmm.lpMint)
-    ).supply;
-
-    let quoteAmountCasted: BN | undefined;
-    let baseAmountCasted: BN | undefined;
-
-    if (quoteAmount != undefined) {
-      let quoteDecimals = unpackMint(
-        storedAmm.quoteMint,
-        await this.provider.connection.getAccountInfo(storedAmm.quoteMint)
-      ).decimals;
-      quoteAmountCasted = new BN(quoteAmount).mul(
-        new BN(10).pow(new BN(quoteDecimals))
-      );
-    }
-
-    if (baseAmount != undefined) {
-      let baseDecimals = unpackMint(
-        storedAmm.baseMint,
-        await this.provider.connection.getAccountInfo(storedAmm.baseMint)
-      ).decimals;
-      baseAmountCasted = new BN(baseAmount).mul(
-        new BN(10).pow(new BN(baseDecimals))
-      );
-    }
-
-    if (lpMintSupply == 0n) {
-      if (quoteAmount == undefined || baseAmount == undefined) {
-        throw new Error(
-          "No pool created yet, you need to specify both base and quote"
-        );
-      }
-
-      // console.log(quoteAmountCasted?.toString());
-      // console.log(baseAmountCasted?.toString())
-
-      return await this.addLiquidityIx(
-        amm,
-        storedAmm.baseMint,
-        storedAmm.quoteMint,
-        quoteAmountCasted as BN,
-        baseAmountCasted as BN,
-        new BN(0)
-      ).rpc();
-    }
-
-    //   quoteAmount == undefined ? undefined : new BN(quoteAmount);
-    // let baseAmountCasted: BN | undefined =
-    //   baseAmount == undefined ? undefined : new BN(baseAmount);
-
-    let sim = this.simulateAddLiquidity(
-      storedAmm.baseAmount,
-      storedAmm.quoteAmount,
-      Number(lpMintSupply),
-      baseAmountCasted,
-      quoteAmountCasted
-    );
-
-    await this.addLiquidityIx(
-      amm,
-      storedAmm.baseMint,
-      storedAmm.quoteMint,
-      sim.quoteAmount,
-      sim.baseAmount,
-      sim.expectedLpTokens
-    ).rpc();
-  }
-
-  addLiquidityIx(
-    amm: PublicKey,
-    baseMint: PublicKey,
-    quoteMint: PublicKey,
-    quoteAmount: BN,
-    maxBaseAmount: BN,
-    minLpTokens: BN,
-    user: PublicKey = this.provider.publicKey
-  ) {
-    const [lpMint] = getAmmLpMintAddr(this.program.programId, amm);
-
-    const userLpAccount = getAssociatedTokenAddressSync(lpMint, user);
-
-    return this.program.methods
-      .addLiquidity({
-        quoteAmount,
-        maxBaseAmount,
-        minLpTokens,
-      })
-      .accounts({
-        user,
-        amm,
-        lpMint,
-        userLpAccount,
-        userBaseAccount: getAssociatedTokenAddressSync(baseMint, user),
-        userQuoteAccount: getAssociatedTokenAddressSync(quoteMint, user),
-        vaultAtaBase: getAssociatedTokenAddressSync(baseMint, amm, true),
-        vaultAtaQuote: getAssociatedTokenAddressSync(quoteMint, amm, true),
-      })
-      .preInstructions([
-        createAssociatedTokenAccountIdempotentInstruction(
-          this.provider.publicKey,
-          userLpAccount,
-          this.provider.publicKey,
-          lpMint
+        systemProgram: SystemProgram.programId,
+        associatedTokenProgram: new PublicKey(
+          "TokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         ),
-      ]);
-  }
-
-  removeLiquidityIx(
-    ammAddr: PublicKey,
-    baseMint: PublicKey,
-    quoteMint: PublicKey,
-    lpTokensToBurn: BN,
-    minBaseAmount: BN,
-    minQuoteAmount: BN
-  ) {
-    const [lpMint] = getAmmLpMintAddr(this.program.programId, ammAddr);
-
-    return this.program.methods
-      .removeLiquidity({
-        lpTokensToBurn,
-        minBaseAmount,
-        minQuoteAmount,
-      })
-      .accounts({
-        user: this.provider.publicKey,
-        amm: ammAddr,
-        lpMint,
-        userLpAccount: getAssociatedTokenAddressSync(
-          lpMint,
-          this.provider.publicKey
-        ),
-        userBaseAccount: getAssociatedTokenAddressSync(
-          baseMint,
-          this.provider.publicKey
-        ),
-        userQuoteAccount: getAssociatedTokenAddressSync(
-          quoteMint,
-          this.provider.publicKey
-        ),
-        vaultAtaBase: getAssociatedTokenAddressSync(baseMint, ammAddr, true),
-        vaultAtaQuote: getAssociatedTokenAddressSync(quoteMint, ammAddr, true),
+        tokenProgram: TOKEN_PROGRAM_ID,
+        baseTokenMetadata: baseTokenMetadata,
+        metadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
+        rent: SYSVAR_RENT_PUBKEY,
       });
   }
 
@@ -335,6 +252,77 @@ export class AmmClient {
     outputAmountMin: BN
   ) {
     const receivingToken = swapType.buy ? baseMint : quoteMint;
+    const TOKEN_PROGRAM_ID = new PublicKey(
+      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    );
+    const TOKEN_2022_PROGRAM_ID = new PublicKey(
+      "TokenzQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+    );
+    const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey(
+      "ATokenGPvRkXzU2Zb1FeP3k3J4J4J4J4J4J4J4J4J4J4"
+    );
+    const SYSVAR_RENT_PUBKEY = new PublicKey(
+      "SysvarRent111111111111111111111111111111111"
+    );
+
+    const AMM_CONFIG_SEED = "amm_config";
+    const POOL_SEED = "pool";
+    const AUTH_SEED = "auth";
+    const POOL_VAULT_SEED = "pool_vault";
+    const POOL_LP_MINT_SEED = "pool_lp_mint";
+    const OBSERVATION_SEED = "observation";
+
+    const amm_config_index = 0;
+    const [amm_config_key, __bump1] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from(AMM_CONFIG_SEED),
+        new Uint8Array(new BN(amm_config_index).toArray("be", 2)),
+      ],
+      this.program.programId
+    );
+
+    const [pool_account_key, __bump2] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from(POOL_SEED),
+        amm_config_key.toBuffer(),
+        baseMint.toBuffer(),
+        quoteMint.toBuffer(),
+      ],
+      this.program.programId
+    );
+
+    const [authority, __bump3] = PublicKey.findProgramAddressSync(
+      [Buffer.from(AUTH_SEED)],
+      this.program.programId
+    );
+
+    const [token_0_vault, __bump4] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from(POOL_VAULT_SEED),
+        pool_account_key.toBuffer(),
+        baseMint.toBuffer(),
+      ],
+      this.program.programId
+    );
+
+    const [token_1_vault, __bump5] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from(POOL_VAULT_SEED),
+        pool_account_key.toBuffer(),
+        quoteMint.toBuffer(),
+      ],
+      this.program.programId
+    );
+
+    const [lp_mint_key, __bump6] = PublicKey.findProgramAddressSync(
+      [Buffer.from(POOL_LP_MINT_SEED), pool_account_key.toBuffer()],
+      this.program.programId
+    );
+
+    const [observation_key, __bump7] = PublicKey.findProgramAddressSync(
+      [Buffer.from(OBSERVATION_SEED), pool_account_key.toBuffer()],
+      this.program.programId
+    );
 
     return this.program.methods
       .swap({
@@ -342,6 +330,11 @@ export class AmmClient {
         inputAmount,
         outputAmountMin,
       })
+      .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666,
+        }),
+      ])
       .accounts({
         user: this.provider.publicKey,
         amm,
@@ -357,6 +350,21 @@ export class AmmClient {
         ),
         vaultAtaBase: getAssociatedTokenAddressSync(baseMint, amm, true),
         vaultAtaQuote: getAssociatedTokenAddressSync(quoteMint, amm, true),
+        ammConfig: amm_config_key,
+        authority: authority,
+        poolAccount: pool_account_key,
+        tokenProgram: TOKEN_PROGRAM_ID,
+        token2022Program: TOKEN_2022_PROGRAM_ID,
+        associatedTokenProgram: ASSOCIATED_TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+        rent: SYSVAR_RENT_PUBKEY,
+        token0Vault: token_0_vault,
+        token1Vault: token_1_vault,
+        createLpAccount: lp_mint_key,
+        createPoolFee: new PublicKey(
+          "DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8"
+        ),
+        observationKey: observation_key,
       })
       .preInstructions([
         // create the receiving token account if it doesn't exist
@@ -372,16 +380,6 @@ export class AmmClient {
       ]);
   }
 
-  async crankThatTwap(amm: PublicKey) {
-    return this.crankThatTwapIx(amm).rpc();
-  }
-
-  crankThatTwapIx(amm: PublicKey) {
-    return this.program.methods.crankThatTwap().accounts({
-      amm,
-    });
-  }
-
   // getter functions
 
   // async getLTWAP(ammAddr: PublicKey): Promise<number> {
@@ -393,56 +391,6 @@ export class AmmClient {
 
   async getAmm(amm: PublicKey): Promise<AmmAccount> {
     return await this.program.account.amm.fetch(amm);
-  }
-
-  getTwap(amm: AmmAccount): BN {
-    return amm.oracle.aggregator.div(
-      amm.oracle.lastUpdatedSlot.sub(amm.createdAtSlot)
-    );
-  }
-
-  simulateAddLiquidity(
-    baseReserves: BN,
-    quoteReserves: BN,
-    lpMintSupply: number,
-    baseAmount?: BN,
-    quoteAmount?: BN,
-    slippageBps?: BN
-  ): AddLiquiditySimulation {
-    if (lpMintSupply == 0) {
-      throw new Error(
-        "This AMM doesn't have existing liquidity so we can't fill in the blanks"
-      );
-    }
-
-    if (baseAmount == undefined && quoteAmount == undefined) {
-      throw new Error("Must specify either a base amount or a quote amount");
-    }
-
-    let expectedLpTokens: BN;
-
-    if (quoteAmount == undefined) {
-      quoteAmount = baseAmount?.mul(quoteReserves).div(baseReserves);
-    }
-    baseAmount = quoteAmount?.mul(baseReserves).div(quoteReserves).addn(1);
-
-    expectedLpTokens = quoteAmount
-      ?.mul(new BN(lpMintSupply))
-      .div(quoteReserves) as BN;
-
-    let minLpTokens, maxBaseAmount;
-    if (slippageBps) {
-      minLpTokens = PriceMath.subtractSlippage(expectedLpTokens, slippageBps);
-      maxBaseAmount = PriceMath.addSlippage(baseAmount as BN, slippageBps);
-    }
-
-    return {
-      quoteAmount: quoteAmount as BN,
-      baseAmount: baseAmount as BN,
-      expectedLpTokens,
-      minLpTokens,
-      maxBaseAmount,
-    };
   }
 
   simulateSwap(
@@ -465,10 +413,21 @@ export class AmmClient {
       outputReserves = quoteReserves;
     }
 
-    let inputAmountWithFee: BN = inputAmount.muln(990);
+    let inputAmountWithFee: BN;
+    if (swapType.buy) {
+      inputAmountWithFee = inputAmount
+        .mul(quoteReserves)
+        .div(baseReserves.sub(inputAmount))
+        .muln(99);
+    } else {
+      inputAmountWithFee = inputAmount
+        .mul(quoteReserves)
+        .div(baseReserves.add(inputAmount))
+        .muln(99);
+    }
 
     let numerator: BN = inputAmountWithFee.mul(outputReserves);
-    let denominator: BN = inputReserves.muln(1000).add(inputAmountWithFee);
+    let denominator: BN = inputReserves.muln(100).add(inputAmountWithFee);
 
     let expectedOut = numerator.div(denominator);
     let minExpectedOut;
