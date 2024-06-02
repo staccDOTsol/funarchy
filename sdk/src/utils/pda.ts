@@ -1,15 +1,8 @@
-import { AccountMeta, PublicKey } from "@solana/web3.js";
-import { utils } from "@coral-xyz/anchor";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
 import BN from "bn.js";
-import {
-  fromWeb3JsPublicKey,
-  toWeb3JsPublicKey,
-} from "@metaplex-foundation/umi-web3js-adapters";
+
 import * as anchor from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
+
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "../constants";
 
 export const getVaultAddr = (
@@ -96,7 +89,7 @@ export const getAmmAddr = (
       baseMint.toBuffer(),
       quoteMint.toBuffer(),
     ],
-    new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+    new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
   );
 };
 

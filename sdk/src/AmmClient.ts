@@ -1,11 +1,31 @@
+import BN from 'bn.js';
+import fs from 'fs';
+
 // @ts-nocheck
 import {
   AnchorProvider,
-  Idl,
-  IdlTypes,
   Program,
   utils,
-} from "@coral-xyz/anchor";
+} from '@coral-xyz/anchor';
+import {
+  MethodsBuilder,
+} from '@coral-xyz/anchor/dist/cjs/program/namespace/methods';
+import {
+  MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
+} from '@metaplex-foundation/mpl-token-metadata';
+import { toWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters';
+import {
+  ASSOCIATED_TOKEN_PROGRAM_ID,
+  createAssociatedTokenAccountIdempotentInstruction,
+  createAssociatedTokenAccountInstruction,
+  createInitializeMint2Instruction,
+  getAssociatedTokenAddressSync,
+  getMinimumBalanceForRentExemptMint,
+  MINT_SIZE,
+  TOKEN_2022_PROGRAM_ID,
+  TOKEN_PROGRAM_ID,
+  unpackMint,
+} from '@solana/spl-token';
 import {
   AddressLookupTableAccount,
   ComputeBudgetProgram,
@@ -13,34 +33,17 @@ import {
   Connection,
   Keypair,
   PublicKey,
-  SYSVAR_RENT_PUBKEY,
+  sendAndConfirmTransaction,
   Signer,
   SystemProgram,
+  SYSVAR_RENT_PUBKEY,
   Transaction,
-  sendAndConfirmTransaction,
-} from "@solana/web3.js";
+} from '@solana/web3.js';
 
-import { Amm, Amm as AmmIDLType } from "./types/amm";
-
-import BN from "bn.js";
-import { AMM_PROGRAM_ID } from "./constants";
-import { AmmAccount, LowercaseKeys } from "./types/";
-import { getAmmLpMintAddr, getAmmAddr } from "./utils/pda";
-import { MethodsBuilder } from "@coral-xyz/anchor/dist/cjs/program/namespace/methods";
-import {
-  MintLayout,
-  unpackMint,
-  getAssociatedTokenAddressSync,
-  createAssociatedTokenAccountIdempotentInstruction,
-  TOKEN_PROGRAM_ID,
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  getMinimumBalanceForRentExemptMint,
-  MINT_SIZE,
-  createInitializeMint2Instruction,
-  createAssociatedTokenAccountInstruction,
-} from "@solana/spl-token";
-import { PriceMath } from "./utils/priceMath";
-import { ASSOCIATED_PROGRAM_ID } from "@coral-xyz/anchor/dist/cjs/utils/token";
+import { AMM_PROGRAM_ID } from './constants';
+import { AmmAccount } from './types/';
+import { Amm as AmmIDLType } from './types/amm';
+import { PriceMath } from './utils/priceMath';
 
 export async function createMint(
   connection: Connection,
@@ -83,14 +86,11 @@ export async function createMint(
 
   return keypair.publicKey;
 }
-import fs from "fs";
-import path from "path";
+
 export type SwapType = {
   buy?: {};
   sell?: {};
 };
-import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
-import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 
 const MPL_TOKEN_METADATA_PROGRAM_ID = toWeb3JsPublicKey(
   UMI_MPL_TOKEN_METADATA_PROGRAM_ID
@@ -149,7 +149,7 @@ export class AmmClient {
     this.provider = provider;
     this.program = new Program(
       JSON.parse(
-        fs.readFileSync("/Users/jd/futbond/target/idl/amm.json", "utf8")
+        fs.readFileSync("//home/ubuntu/funarchy/target/idl/amm.json", "utf8")
       ),
       provider
     );
@@ -173,7 +173,7 @@ export class AmmClient {
   }
 
   getProgramId(): PublicKey {
-    return new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ");
+    return new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH");
   }
 
   async createAmm(
@@ -201,13 +201,10 @@ export class AmmClient {
         uri,
         proposal_number,
         "USDC",
-        bata,
-        qata,
         bump
       )
     ).rpc({ skipPreflight: true });
     console.log("hm", hm);
-    return amm;
   }
   async createAmmIx(
     baseMint: PublicKey,
@@ -308,18 +305,7 @@ export class AmmClient {
     outputAmountMin: BN
   ) {
     const receivingToken = swapType.buy ? baseMint : quoteMint;
-    const TOKEN_PROGRAM_ID = new PublicKey(
-      "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-    );
-    const TOKEN_2022_PROGRAM_ID = new PublicKey(
-      "TokenzQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
-    );
-    const ASSOCIATED_TOKEN_PROGRAM_ID = new PublicKey(
-      "ATokenGPvRkXzU2Zb1FeP3k3J4J4J4J4J4J4J4J4J4J4"
-    );
-    const SYSVAR_RENT_PUBKEY = new PublicKey(
-      "SysvarRent111111111111111111111111111111111"
-    );
+   
 
     const AMM_CONFIG_SEED = "amm_config";
     const POOL_SEED = "pool";
@@ -334,7 +320,7 @@ export class AmmClient {
         Buffer.from(AMM_CONFIG_SEED),
         new Uint8Array(new BN(amm_config_index).toArray("be", 2)),
       ],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
 
     const [pool_account_key, __bump2] = PublicKey.findProgramAddressSync(
@@ -344,12 +330,12 @@ export class AmmClient {
         baseMint.toBuffer(),
         quoteMint.toBuffer(),
       ],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
 
     const [authority, __bump3] = PublicKey.findProgramAddressSync(
       [Buffer.from(AUTH_SEED)],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
 
     const [token_0_vault, __bump4] = PublicKey.findProgramAddressSync(
@@ -358,7 +344,7 @@ export class AmmClient {
         pool_account_key.toBuffer(),
         baseMint.toBuffer(),
       ],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
 
     const [token_1_vault, __bump5] = PublicKey.findProgramAddressSync(
@@ -367,17 +353,17 @@ export class AmmClient {
         pool_account_key.toBuffer(),
         quoteMint.toBuffer(),
       ],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
 
     const [lp_mint_key, __bump6] = PublicKey.findProgramAddressSync(
       [Buffer.from(POOL_LP_MINT_SEED), pool_account_key.toBuffer()],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
 
     const [observation_key, __bump7] = PublicKey.findProgramAddressSync(
       [Buffer.from(OBSERVATION_SEED), pool_account_key.toBuffer()],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
 
     return this.program.methods
@@ -390,6 +376,26 @@ export class AmmClient {
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: 66600,
         }),
+      ])
+      .preInstructions([
+      createAssociatedTokenAccountIdempotentInstruction(
+        this.provider.publicKey,
+        getAssociatedTokenAddressSync(
+          baseMint,
+          this.provider.publicKey
+        ),
+        this.provider.publicKey,
+        baseMint
+      ),
+      createAssociatedTokenAccountIdempotentInstruction(
+        this.provider.publicKey,
+        getAssociatedTokenAddressSync(
+          quoteMint,
+          this.provider.publicKey
+        ),
+        this.provider.publicKey,
+        quoteMint
+      )
       ])
       .accounts({
         user: this.provider.publicKey,
@@ -421,6 +427,9 @@ export class AmmClient {
           "DNXgeM9EiiaAbaWvwjHj9fQQLAX5ZsfHyvmYUNRAdNC8"
         ),
         observationKey: observation_key,
+        baseMint,
+        quoteMint,
+        lpMint: lp_mint_key,
       })
       .preInstructions([
         // create the receiving token account if it doesn't exist

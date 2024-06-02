@@ -10,7 +10,7 @@ pub enum SwapType {
     Sell,
 }
 
-#[account]
+#[account(zero_copy(unsafe))]
 pub struct Amm {
     pub bump: u8,
 

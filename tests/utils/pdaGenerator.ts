@@ -1,6 +1,9 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from '@coral-xyz/anchor';
 
-import { Program, PublicKey } from "./metaDAO";
+import {
+  Program,
+  PublicKey,
+} from './metaDAO';
 
 export type AddressAndBump = [PublicKey, number];
 
@@ -14,7 +17,7 @@ export class PDAGenerator {
   generateMetaDAOPDAAddress(): AddressAndBump {
     return anchor.web3.PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("WWCACOTMICMIBMHAFTTWYGHMB")],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
@@ -24,14 +27,14 @@ export class PDAGenerator {
         anchor.utils.bytes.utf8.encode("member"),
         anchor.utils.bytes.utf8.encode(name),
       ],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
   generateTreasuryPDAAddress(memberAddress: PublicKey): AddressAndBump {
     return anchor.web3.PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("treasury"), memberAddress.toBuffer()],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
@@ -45,7 +48,7 @@ export class PDAGenerator {
         proposal.toBuffer(),
         Buffer.from([redeemableOnPass]),
       ],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
@@ -59,7 +62,7 @@ export class PDAGenerator {
         conditionalExpressionAddress.toBuffer(),
         underlyingMint.toBuffer(),
       ],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
@@ -73,7 +76,7 @@ export class PDAGenerator {
         conditionalVault.toBuffer(),
         user.toBuffer(),
       ],
-      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 }

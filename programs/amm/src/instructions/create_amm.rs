@@ -6,7 +6,7 @@ use anchor_spl::metadata::{
     Metadata
 };
 use crate::error::AmmError;
-use crate::{generate_amm_seeds, state::*};
+use crate::state::*;
 
 #[derive(Accounts)]
 pub struct CreateAmm<'info> {
@@ -15,7 +15,7 @@ pub struct CreateAmm<'info> {
     #[account(
         init,
         payer = user,
-        space = 8 + std::mem::size_of::<Amm>() + std::mem::size_of::<Amm>(),
+        space = 8 + 144,
         seeds = [
             AMM_SEED_PREFIX,
             base_mint.key().as_ref(),
@@ -23,7 +23,7 @@ pub struct CreateAmm<'info> {
         ],
         bump
     )]
-    pub amm: Account<'info, Amm>,
+    pub amm: AccountLoader<'info, Amm>,
     #[account(mut,
     mint::authority = amm,
     mint::freeze_authority = amm,
@@ -68,7 +68,7 @@ impl CreateAmm<'_> {
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>, pof: String, uri: String, proposal_number: u16, osymbol: String, bump: u8) -> Result<()> {
+    pub fn handle(ctx: Context<Self>, pof: String, uri: String, proposal_number: u16, osymbol: String, _: u8) -> Result<()> {
         let CreateAmm {
             user,
             amm: _,
@@ -78,8 +78,6 @@ impl CreateAmm<'_> {
             token_program,
             ..
         } = ctx.accounts;
-
-        let amm = &mut ctx.accounts.amm;
         let current_slot = Clock::get()?.slot;
 
         // there are null bytes we must trim from string, otherwise string value is longer than we want
@@ -88,37 +86,22 @@ impl CreateAmm<'_> {
 
         let base_symbol = format!("{}{}", pof, quote_token_symbol);
        
-        amm.bump = ctx.bumps.amm;
 
-        amm.created_at_slot = current_slot;
-
-        amm.base_mint = base_mint.key();
-        amm.quote_mint = quote_mint.key();
-
-        amm.base_mint_decimals = base_mint.decimals;
-        amm.quote_mint_decimals = quote_mint.decimals;
-
-        amm.base_amount = 0;
-        amm.quote_amount = 0;
-
-        amm.v_base_reserves = (1_000_000_000_u128 * 10_u128.pow(base_mint.decimals as u32)) as u64;
-        amm.v_quote_reserves = (10_u128 * 10_u128.pow(quote_mint.decimals as u32)) as u64;
-        amm.base_reserves = (1_000_000_000_u128 * 10_u128.pow(base_mint.decimals as u32)) as u64;
-        amm.quote_reserves = 0;
-        amm.vault_status = 0;
-        amm.reload()?;
-        let signer_seeds = generate_amm_seeds!(amm);
-
-      /* */
+        let signer_seeds: &[&[u8]; 4] = &[
+            AMM_SEED_PREFIX,
+            base_mint.to_account_info().key.as_ref(),
+            quote_mint.to_account_info().key.as_ref(),
+            &[ctx.bumps.amm],
+        ];
             
             let cpi_program = ctx.accounts.metadata_program.to_account_info();
 
             let cpi_accounts = CreateMetadataAccountsV3 {
                 metadata: base_token_metadata.to_account_info(),
                 mint: base_mint.to_account_info(),
-                mint_authority: amm.to_account_info(),
+                mint_authority: ctx.accounts.amm.to_account_info(),
                 payer: user.to_account_info(),
-                update_authority: amm.to_account_info(),
+                update_authority: ctx.accounts.amm.to_account_info(),
                 system_program: ctx.accounts.system_program.to_account_info(),
                 rent: ctx.accounts.rent.to_account_info(),
             };
@@ -144,13 +127,33 @@ impl CreateAmm<'_> {
                 MintTo {
                     to: ctx.accounts.vault_ata_base.to_account_info(),
                     mint: base_mint.to_account_info(),
-                    authority: amm.to_account_info(),
+                    authority: ctx.accounts.amm.to_account_info(),
                 },
                 &[signer_seeds]
             ),
-            1_000_000_000_i32.pow(base_mint.decimals as u32) as u64,
+            (1_000_000_000_u128 * 10_u128.pow(base_mint.decimals as u32)) as u64,
         )?;
         
+        let amm = &mut ctx.accounts.amm.load_init()?;
+
+        amm.bump = ctx.bumps.amm;
+
+        amm.created_at_slot = current_slot;
+
+        amm.base_mint = base_mint.key();
+        amm.quote_mint = quote_mint.key();
+
+        amm.base_mint_decimals = base_mint.decimals;
+        amm.quote_mint_decimals = quote_mint.decimals;
+
+        amm.base_amount = 0;
+        amm.quote_amount = 0;
+
+        amm.v_base_reserves = (1_000_000_000_u128 * 10_u128.pow(base_mint.decimals as u32)) as u64;
+        amm.v_quote_reserves = (10_u128 * 10_u128.pow(quote_mint.decimals as u32)) as u64;
+        amm.base_reserves = (1_000_000_000_u128 * 10_u128.pow(base_mint.decimals as u32)) as u64;
+        amm.quote_reserves = 0;
+        amm.vault_status = 0;
 
         Ok(())
     }

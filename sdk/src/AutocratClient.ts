@@ -1,43 +1,41 @@
+import BN from 'bn.js';
+
 // @ts-nocheck
 import {
   AnchorProvider,
   Idl,
-  IdlTypes,
   Program,
-  Wallet,
-} from "@coral-xyz/anchor";
+} from '@coral-xyz/anchor';
+import { keypairIdentity } from '@metaplex-foundation/umi';
+import {
+  createAssociatedTokenAccountIdempotentInstruction,
+  getAssociatedTokenAddressSync,
+  unpackMint,
+} from '@solana/spl-token';
 import {
   AccountMeta,
   AddressLookupTableAccount,
   ComputeBudgetProgram,
-  Connection,
   Keypair,
   PublicKey,
   Transaction,
   TransactionInstruction,
-} from "@solana/web3.js";
-import { Keypair as kp } from "@metaplex-foundation/umi";
-import { PriceMath } from "./utils/priceMath";
-import { ProposalInstruction, InitializeDaoParams } from "./types";
+} from '@solana/web3.js';
 
-import { Autocrat, Autocrat as AutocratIDL } from "./types/autocrat";
+import { AmmClient } from './AmmClient';
+import { ConditionalVaultClient } from './ConditionalVaultClient';
 import {
-  ConditionalVault,
-  IDL as ConditionalVaultIDL,
-} from "./types/conditional_vault";
-
-import BN from "bn.js";
-import {
-  AMM_PROGRAM_ID,
   AUTOCRAT_PROGRAM_ID,
   CONDITIONAL_VAULT_PROGRAM_ID,
   MAINNET_USDC,
   USDC_DECIMALS,
-} from "./constants";
+} from './constants';
 import {
-  DEFAULT_CU_PRICE,
-  InstructionUtils,
-  MaxCUs,
+  InitializeDaoParams,
+  ProposalInstruction,
+} from './types';
+import { Autocrat } from './types/autocrat';
+import {
   getAmmAddr,
   getAmmLpMintAddr,
   getDaoTreasuryAddr,
@@ -45,16 +43,10 @@ import {
   getVaultAddr,
   getVaultFinalizeMintAddr,
   getVaultRevertMintAddr,
+  InstructionUtils,
   uploadConditionalTokenMetadataJson,
-} from "./utils";
-import { ConditionalVaultClient } from "./ConditionalVaultClient";
-import { AmmClient } from "./AmmClient";
-import {
-  createAssociatedTokenAccountIdempotentInstruction,
-  getAssociatedTokenAddressSync,
-  unpackMint,
-} from "@solana/spl-token";
-import { keypairIdentity } from "@metaplex-foundation/umi";
+} from './utils';
+import { PriceMath } from './utils/priceMath';
 
 export type CreateClientParams = {
   provider: AnchorProvider;
@@ -90,7 +82,7 @@ export class AutocratClient {
     this.ammClient = AmmClient.createClient({
       provider,
       ammProgramId: new PublicKey(
-        "2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ"
+        "62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH"
       ),
     });
     this.luts = luts;

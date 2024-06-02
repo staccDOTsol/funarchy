@@ -22,7 +22,7 @@ pub mod state;
 use crate::instructions::*;
 use crate::state::*;
 
-declare_id!("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ");
+declare_id!("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH");
 
 #[program]
 pub mod amm {
@@ -30,8 +30,8 @@ pub mod amm {
     use super::*;
 
     #[access_control(ctx.accounts.validate())]
-    pub fn create_amm(ctx: Context<CreateAmm>, pof: String, uri: String, proposal_number: u16, symbol: String, bump: u8) -> Result<()> {
-        CreateAmm::handle(ctx, pof, uri, proposal_number, symbol, bump)
+    pub fn create_amm(ctx: Context<CreateAmm>, pof: String, uri: String, proposal_number: u16, symbol: String, a: u8) -> Result<()> {
+        CreateAmm::handle(ctx, pof, uri, proposal_number, symbol, a)
     }
 
     pub fn swap(ctx: Context<Swap>, args: SwapArgs) -> Result<()> {

@@ -1,28 +1,29 @@
-import * as anchor from "@coral-xyz/anchor";
-import { BN } from "@coral-xyz/anchor";
-import { AnchorProvider } from "@coral-xyz/anchor";
-import { getAssociatedTokenAddressSync, getOrCreateAssociatedTokenAccount } from "@solana/spl-token";
+import { assert } from 'chai';
 
-
-
+import * as anchor from '@coral-xyz/anchor';
 import {
-  createAssociatedTokenAccount,
-  mintTo,
-  getAccount,
-  getMint,
-} from "@solana/spl-token";
-
+  AnchorProvider,
+  BN,
+} from '@coral-xyz/anchor';
 import {
-  getAmmAddr,
+  getAssociatedTokenAddressSync,
+  getOrCreateAssociatedTokenAccount,
+} from '@solana/spl-token';
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+} from '@solana/web3.js';
+
+import { DEVNET_USDC as USDC } from '../scripts/consts';
+import {
   AmmClient,
+  createMint,
+  getAmmAddr,
   PriceMath,
-  getAmmLpMintAddr,
-} from "../sdk/src";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { assert } from "chai";
-import { expectError, fastForward } from "./utils/utils";
-import { MAINNET_USDC as USDC } from "@metadaoproject/futarchy";
-import { createMint } from "../sdk/src";
+} from '../sdk/src';
+import { expectError } from './utils/utils';
+
 const META_DECIMALS = 6;
 const USDC_DECIMALS = 6;
 
@@ -46,7 +47,7 @@ describe("amm", async function () {
     );
 
     provider = new AnchorProvider(connection, new anchor.Wallet(payer), {})
-    ammClient = await AmmClient.createClient({ provider, ammProgramId: new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ") });
+    ammClient = await AmmClient.createClient({ provider, ammProgramId: new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH") });
   });
 
   beforeEach(async function () {

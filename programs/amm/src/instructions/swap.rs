@@ -4,9 +4,9 @@ use anchor_spl::token::{self, *};
 use anchor_spl::token_2022::Token2022;
 use raydium_cp_swap::cpi::accounts::Initialize;
 use raydium_cp_swap::program::RaydiumCpSwap;
-use crate::AMM_SEED_PREFIX;
+use crate::{generate_amm_seeds, AMM_SEED_PREFIX};
 use crate::error::AmmError;
-use crate::{generate_amm_seeds, Amm, SwapType};
+use crate::{Amm, SwapType};
 
 #[derive(AnchorSerialize, AnchorDeserialize)]
 pub struct SwapArgs {
@@ -20,28 +20,28 @@ pub struct Swap<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(mut)]
-    pub amm: Account<'info, Amm>,
+    pub amm: AccountLoader<'info, Amm>,
     #[account(
         mut,
-        token::mint = amm.base_mint,
+        token::mint = amm.load()?.base_mint,
         token::authority = user,
     )]
     pub user_base_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        token::mint = amm.quote_mint,
+        token::mint = amm.load()?.quote_mint,
         token::authority = user,
     )]
     pub user_quote_account: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        associated_token::mint = amm.base_mint,
+        associated_token::mint = amm.load()?.base_mint,
         associated_token::authority = amm,
     )]
     pub vault_ata_base: Box<Account<'info, TokenAccount>>,
     #[account(
         mut,
-        associated_token::mint = amm.quote_mint,
+        associated_token::mint = amm.load()?.quote_mint,
         associated_token::authority = amm,
     )]
     pub vault_ata_quote: Box<Account<'info, TokenAccount>>,
@@ -49,12 +49,12 @@ pub struct Swap<'info> {
     pub token_2022_program: Program<'info, Token2022>,
     #[account(
         mut,
-        constraint = base_mint.key() == amm.base_mint,
+        constraint = base_mint.key() == amm.load()?.base_mint,
     )]
     pub base_mint: Box<Account<'info, Mint>>,
     #[account(
         mut,
-        constraint = quote_mint.key() == amm.quote_mint,
+        constraint = quote_mint.key() == amm.load()?.quote_mint,
     )]
     pub quote_mint: Box<Account<'info, Mint>>,
     pub raydium_cp_swap_program: Program<'info, RaydiumCpSwap>,
@@ -113,14 +113,12 @@ impl Swap<'_> {
 
         require!(input_amount > 0, AmmError::ZeroSwapAmount);
 
+        let amm_clone = &accounts.amm.load()?; 
+        let signer_seeds = generate_amm_seeds!(amm_clone);
         let output_amount = {
-            let amm = &mut accounts.amm;
+            let amm = &mut accounts.amm.load_mut()?;
             amm.swap(input_amount, swap_type)?
         };
-
-        
-        let amm_clone = accounts.amm.clone();
-        let signer_seeds = generate_amm_seeds!(amm_clone);
 
         let (user_from, vault_to, vault_from, user_to) = match swap_type {
             SwapType::Buy => (
@@ -141,7 +139,7 @@ impl Swap<'_> {
             SwapType::Buy => 
             {
                 
-                if accounts.amm.base_reserves as i64 -  output_amount as i64 <= 0 {
+                if accounts.amm.load()?.base_reserves as i64 -  output_amount as i64 <= 0 {
                     token::mint_to(
                         CpiContext::new_with_signer(
                             accounts.token_program.to_account_info(),
@@ -152,11 +150,11 @@ impl Swap<'_> {
                             },
                             &[signer_seeds]
                         ),
-                        1_000_000_000_i32.pow(accounts.base_mint.decimals as u32) as u64,
+                        (1_000_000_000_u128 * 10_u128.pow(accounts.base_mint.decimals as u32) )as u64,
                     )?;
 
-                    let mint0 = accounts.amm.base_mint.clone().key();
-                    let mint1 = accounts.amm.quote_mint.key();
+                    let mint0 = accounts.amm.load()?.base_mint.clone().key();
+                    let mint1 = accounts.amm.load()?.quote_mint.key();
                     let init_amount_0 = accounts.vault_ata_base.amount;
                     let init_amount_1 = accounts.vault_ata_quote.amount;
                     let (mint0, mint1, init_amount_0, init_amount_1, user_token_0_account, user_token_1_account, token_0_program, token_1_program) = if mint0 > mint1 {
@@ -219,11 +217,11 @@ impl Swap<'_> {
                     ).unwrap();
                 }
             { 
-                let amm = & mut accounts.amm;
+                let amm = & mut accounts.amm.load_mut()?;
                 
-                amm.v_base_reserves -= output_amount;
+                amm.v_base_reserves -= output_amount / 10_u64.pow(amm.base_mint_decimals as u32);
                 amm.base_reserves -= output_amount;
-                amm.v_quote_reserves += input_amount;
+                amm.v_quote_reserves += input_amount / 10_u64.pow(amm.quote_mint_decimals as u32);
                 amm.quote_reserves += input_amount;
             }
 
@@ -254,7 +252,7 @@ impl Swap<'_> {
 
             }
             SwapType::Sell => {
-                let amm = &mut accounts.amm;
+                let amm = &mut accounts.amm.load_mut()?;
                 // update the bonding curve parameters
                 amm.v_base_reserves += input_amount;
                 amm.base_reserves += input_amount;
