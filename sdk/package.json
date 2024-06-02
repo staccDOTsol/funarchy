@@ -13,11 +13,13 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "0.30.0",
+    "@solana/codecs-data-structures": "^2.0.0-experimental.5e8ac8d",
     "@solana/spl-token": "^0.3.7",
     "@solana/web3.js": "^1.74.0",
     "bn.js": "^5.2.1",
     "decimal.js": "^10.4.3",
-    "esbuild": "^0.17.15"
+    "esbuild": "^0.17.15",
+    "rpc-websockets": "^7.11.1"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",

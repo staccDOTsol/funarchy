@@ -46,7 +46,7 @@ describe("amm", async function () {
     );
 
     provider = new AnchorProvider(connection, new anchor.Wallet(payer), {})
-    ammClient = await AmmClient.createClient({ provider, ammProgramId: new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj") });
+    ammClient = await AmmClient.createClient({ provider, ammProgramId: new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ") });
   });
 
   beforeEach(async function () {
@@ -114,7 +114,8 @@ console.log(bata)
       "http://google.com",
       1,
       bata,
-      qata
+      qata,
+      bump
 
     );
   });
@@ -151,7 +152,11 @@ console.log(bata)
         "SameTokenMints",
         "create AMM succeeded despite same token mints"
       );
-
+        const [_, bump] = getAmmAddr(
+        ammClient.program.programId,
+        META,
+        META,
+      );
       let proposal = Keypair.generate().publicKey;
 
       (await ammClient
@@ -162,7 +167,8 @@ console.log(bata)
           "http://google.com",
           0,
 
-        "USDC"
+        "USDC",
+        bump
         ))
         .rpc()
         .then(callbacks[0], callbacks[1]);

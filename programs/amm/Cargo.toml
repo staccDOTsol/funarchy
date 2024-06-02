@@ -17,8 +17,8 @@ cpi = ["no-entrypoint"]
 default = []
 
 [dependencies]
-anchor-lang = { version = "0.28.0", features = ["init-if-needed"] }
-anchor-spl = { version = "0.28.0", features = ["metadata"] }
+anchor-lang = { version = "0.29.0", features = ["init-if-needed"] }
+anchor-spl = { version = "0.29.0", features = ["metadata"] }
 solana-security-txt = "1.1.1"
 ahash = "^0.8.1"
 raydium-cp-swap = { path = "../../../raydium-cp-swap/programs/cp-swap", features = ["cpi"] }

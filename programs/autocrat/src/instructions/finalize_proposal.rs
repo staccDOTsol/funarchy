@@ -10,8 +10,8 @@ pub struct FinalizeProposal<'info> {
         has_one = dao,
     )]
     pub proposal: Account<'info, Proposal>,
-    pub pass_amm: AccountLoader<'info, Amm>,
-    pub fail_amm: AccountLoader<'info, Amm>,
+    pub pass_amm: Account<'info, Amm>,
+    pub fail_amm: Account<'info, Amm>,
     #[account(has_one = treasury)]
     pub dao: Box<Account<'info, Dao>>,
     /// CHECK: never read
@@ -45,8 +45,8 @@ impl FinalizeProposal<'_> {
 
         } = ctx.accounts;
 
-        let pass_market_twap = pass_amm.load()?.calculate_price()?;
-        let fail_market_twap = fail_amm.load()?.calculate_price()?;
+        let pass_market_twap = pass_amm.calculate_price()?;
+        let fail_market_twap = fail_amm.calculate_price()?;
 
         // this can't overflow because each twap can only be MAX_PRICE (~1e31),
         // MAX_BPS + pass_threshold_bps is at most 1e5, and a u128 can hold
@@ -56,12 +56,12 @@ impl FinalizeProposal<'_> {
             / MAX_BPS as u128;
 
         let new_proposal_state = if pass_market_twap > threshold {
-            pass_amm.load_mut()?.vault_status = 1;
-            fail_amm.load_mut()?.vault_status = 2;
+            pass_amm.vault_status = 1;
+            fail_amm.vault_status = 2;
             ProposalState::Passed
         } else {
-            pass_amm.load_mut()?.vault_status = 2;
-            fail_amm.load_mut()?.vault_status = 1;
+            pass_amm.vault_status = 2;
+            fail_amm.vault_status = 1;
             ProposalState::Failed
         };
 
@@ -69,12 +69,12 @@ impl FinalizeProposal<'_> {
 
         match new_proposal_state {
             ProposalState::Passed => {
-                assert!(pass_amm.load()?.vault_status == 1);
-                assert!(fail_amm.load()?.vault_status == 2);
+                assert!(pass_amm.vault_status == 1);
+                assert!(fail_amm.vault_status == 2);
             }
             ProposalState::Failed => {
-                assert!(pass_amm.load()?.vault_status == 2);
-                assert!(fail_amm.load()?.vault_status == 1);
+                assert!(pass_amm.vault_status == 2);
+                assert!(fail_amm.vault_status == 1);
             }
             _ => unreachable!("Encountered an unexpected proposal state"),
         }

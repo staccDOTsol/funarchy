@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AnchorProvider, Program } from "@coral-xyz/anchor";
 import {
   AddressLookupTableAccount,

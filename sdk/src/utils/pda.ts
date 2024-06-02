@@ -9,6 +9,7 @@ import {
   fromWeb3JsPublicKey,
   toWeb3JsPublicKey,
 } from "@metaplex-foundation/umi-web3js-adapters";
+import * as anchor from "@coral-xyz/anchor";
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "../constants";
 
 export const getVaultAddr = (
@@ -90,8 +91,12 @@ export const getAmmAddr = (
   quoteMint: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [Buffer.from("amm__"), baseMint.toBuffer(), quoteMint.toBuffer()],
-    new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+    [
+      anchor.utils.bytes.utf8.encode("amm__"),
+      baseMint.toBuffer(),
+      quoteMint.toBuffer(),
+    ],
+    new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
   );
 };
 

@@ -1,12 +1,12 @@
 [toolchain]
-        anchor_version = "0.28.0"
+        anchor_version = "0.29.0"
 [features]
 seeds = false
 skip-lint = false
 
 [programs.localnet]
-amm = "6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj"
-autocrat = "J7MpMtBj4WVNJ7MQxFj8owfjXAe7BmmdoGgMuh8xMuMU"
+amm = "2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ"
+autocrat = "9eTG7xLyUSaab27EWxvhctNdCUntkZ3yD4qLfdh5KyTK"
 
 [registry]
 url = "https://api.apr.dev"

@@ -14,7 +14,7 @@ export class PDAGenerator {
   generateMetaDAOPDAAddress(): AddressAndBump {
     return anchor.web3.PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("WWCACOTMICMIBMHAFTTWYGHMB")],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
   }
 
@@ -24,14 +24,14 @@ export class PDAGenerator {
         anchor.utils.bytes.utf8.encode("member"),
         anchor.utils.bytes.utf8.encode(name),
       ],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
   }
 
   generateTreasuryPDAAddress(memberAddress: PublicKey): AddressAndBump {
     return anchor.web3.PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("treasury"), memberAddress.toBuffer()],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
   }
 
@@ -45,7 +45,7 @@ export class PDAGenerator {
         proposal.toBuffer(),
         Buffer.from([redeemableOnPass]),
       ],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
   }
 
@@ -59,7 +59,7 @@ export class PDAGenerator {
         conditionalExpressionAddress.toBuffer(),
         underlyingMint.toBuffer(),
       ],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
   }
 
@@ -73,7 +73,7 @@ export class PDAGenerator {
         conditionalVault.toBuffer(),
         user.toBuffer(),
       ],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
   }
 }

@@ -19,15 +19,15 @@ export type InitializeDaoParams = any;
 export type UpdateDaoParams = any;
 export type ProposalInstruction = any;
 
-export type Proposal = IdlAccounts<Autocrat>["proposal"];
+export type Proposal = IdlAccounts<any>["proposal"];
 export type ProposalWrapper = {
   account: Proposal;
   publicKey: PublicKey;
 };
 
-export type DaoAccount = IdlAccounts<Autocrat>["dao"];
-export type ProposalAccount = IdlAccounts<Autocrat>["proposal"];
+export type DaoAccount = IdlAccounts<any>["dao"];
+export type ProposalAccount = IdlAccounts<any>["proposal"];
 
-export type AmmAccount = IdlAccounts<Amm>["amm"];
+export type AmmAccount = IdlAccounts<any>["amm"];
 
 export type ConditionalVaultAccount = IdlAccounts<any>["conditionalVault"];

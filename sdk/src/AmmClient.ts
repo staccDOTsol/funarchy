@@ -1,3 +1,4 @@
+// @ts-nocheck
 import {
   AnchorProvider,
   Idl,
@@ -82,446 +83,8 @@ export async function createMint(
 
   return keypair.publicKey;
 }
-const idl = {
-  address: "6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj",
-  metadata: {
-    name: "amm",
-    version: "0.3.0",
-    spec: "0.1.0",
-    description: "Created with Anchor",
-  },
-  instructions: [
-    {
-      name: "create_amm",
-      discriminator: [242, 91, 21, 170, 5, 68, 125, 64],
-      accounts: [
-        {
-          name: "user",
-          writable: true,
-          signer: true,
-        },
-        {
-          name: "amm",
-          writable: true,
-          pda: {
-            seeds: [
-              {
-                kind: "const",
-                value: [97, 109, 109, 95, 95],
-              },
-              {
-                kind: "account",
-                path: "base_mint",
-              },
-              {
-                kind: "account",
-                path: "quote_mint",
-              },
-            ],
-          },
-        },
-        {
-          name: "base_mint",
-          writable: true,
-        },
-        {
-          name: "quote_mint",
-        },
-        {
-          name: "vault_ata_base",
-          writable: true,
-        },
-        {
-          name: "vault_ata_quote",
-          writable: true,
-        },
-        {
-          name: "associated_token_program",
-          address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
-        },
-        {
-          name: "token_program",
-          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-        },
-        {
-          name: "system_program",
-          address: "11111111111111111111111111111111",
-        },
-        {
-          name: "base_token_metadata",
-          writable: true,
-        },
-        {
-          name: "metadata_program",
-          address: "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-        },
-        {
-          name: "rent",
-          address: "SysvarRent111111111111111111111111111111111",
-        },
-      ],
-      args: [
-        {
-          name: "pof",
-          type: "string",
-        },
-        {
-          name: "uri",
-          type: "string",
-        },
-        {
-          name: "proposal_number",
-          type: "u16",
-        },
-        {
-          name: "symbol",
-          type: "string",
-        },
-      ],
-    },
-    {
-      name: "swap",
-      discriminator: [248, 198, 158, 145, 225, 117, 135, 200],
-      accounts: [
-        {
-          name: "user",
-          writable: true,
-          signer: true,
-        },
-        {
-          name: "amm",
-          writable: true,
-        },
-        {
-          name: "user_base_account",
-          writable: true,
-        },
-        {
-          name: "user_quote_account",
-          writable: true,
-        },
-        {
-          name: "vault_ata_base",
-          writable: true,
-        },
-        {
-          name: "vault_ata_quote",
-          writable: true,
-        },
-        {
-          name: "token_program",
-          address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-        },
-        {
-          name: "token_2022_program",
-          address: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
-        },
-        {
-          name: "base_mint",
-          writable: true,
-        },
-        {
-          name: "quote_mint",
-          writable: true,
-        },
-        {
-          name: "raydium_cp_swap_program",
-          address: "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C",
-        },
-        {
-          name: "amm_config",
-        },
-        {
-          name: "authority",
-        },
-        {
-          name: "pool_account",
-          writable: true,
-        },
-        {
-          name: "associated_token_program",
-          address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
-        },
-        {
-          name: "system_program",
-          address: "11111111111111111111111111111111",
-        },
-        {
-          name: "rent",
-          address: "SysvarRent111111111111111111111111111111111",
-        },
-        {
-          name: "token_0_vault",
-          writable: true,
-        },
-        {
-          name: "token_1_vault",
-          writable: true,
-        },
-        {
-          name: "create_lp_account",
-          writable: true,
-        },
-        {
-          name: "create_pool_fee",
-          writable: true,
-        },
-        {
-          name: "observation_key",
-          writable: true,
-        },
-        {
-          name: "lp_mint",
-          writable: true,
-        },
-      ],
-      args: [
-        {
-          name: "args",
-          type: {
-            defined: {
-              name: "SwapArgs",
-            },
-          },
-        },
-      ],
-    },
-  ],
-  accounts: [
-    {
-      name: "Amm",
-      discriminator: [143, 245, 200, 17, 74, 214, 196, 135],
-    },
-  ],
-  errors: [
-    {
-      code: 6000,
-      name: "NoSlotsPassed",
-      msg: "Can't get a TWAP before some observations have been stored",
-    },
-    {
-      code: 6001,
-      name: "NoReserves",
-      msg: "Can't swap through a pool without token reserves on either side",
-    },
-    {
-      code: 6002,
-      name: "InputAmountOverflow",
-      msg: "Input token amount is too large for a swap, causes overflow",
-    },
-    {
-      code: 6003,
-      name: "AddLiquidityCalculationError",
-      msg: "Add liquidity calculation error",
-    },
-    {
-      code: 6004,
-      name: "DecimalScaleError",
-      msg: "Error in decimal scale conversion",
-    },
-    {
-      code: 6005,
-      name: "SameTokenMints",
-      msg: "You can't create an AMM pool where the token mints are the same",
-    },
-    {
-      code: 6006,
-      name: "SwapSlippageExceeded",
-      msg: "A user wouldn't have gotten back their `output_amount_min`, reverting",
-    },
-    {
-      code: 6007,
-      name: "InsufficientBalance",
-      msg: "The user had insufficient balance to do this",
-    },
-    {
-      code: 6008,
-      name: "ZeroLiquidityRemove",
-      msg: "Must remove a non-zero amount of liquidity",
-    },
-    {
-      code: 6009,
-      name: "ZeroLiquidityToAdd",
-      msg: "Cannot add liquidity with 0 tokens on either side",
-    },
-    {
-      code: 6010,
-      name: "ZeroMinLpTokens",
-      msg: "Must specify a non-zero `min_lp_tokens` when adding to an existing pool",
-    },
-    {
-      code: 6011,
-      name: "AddLiquiditySlippageExceeded",
-      msg: "LP wouldn't have gotten back `lp_token_min`",
-    },
-    {
-      code: 6012,
-      name: "AddLiquidityMaxBaseExceeded",
-      msg: "LP would have spent more than `max_base_amount`",
-    },
-    {
-      code: 6013,
-      name: "InsufficientQuoteAmount",
-      msg: "`quote_amount` must be greater than 100000000 when initializing a pool",
-    },
-    {
-      code: 6014,
-      name: "ZeroSwapAmount",
-      msg: "Users must swap a non-zero amount",
-    },
-    {
-      code: 6015,
-      name: "ConstantProductInvariantFailed",
-      msg: "K should always be increasing",
-    },
-    {
-      code: 6016,
-      name: "CastingOverflow",
-      msg: "Casting has caused an overflow",
-    },
-    {
-      code: 6017,
-      name: "InvalidSupply",
-      msg: "The pool has an invalid supply",
-    },
-    {
-      code: 6018,
-      name: "InvalidMintAuthority",
-      msg: "The pool has an invalid mint authority",
-    },
-    {
-      code: 6019,
-      name: "BuyDisabled",
-      msg: "The pool disabled buying",
-    },
-    {
-      code: 6020,
-      name: "SellDisabled",
-      msg: "The pool disabled selling",
-    },
-  ],
-  types: [
-    {
-      name: "Amm",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "bump",
-            type: "u8",
-          },
-          {
-            name: "created_at_slot",
-            type: "u64",
-          },
-          {
-            name: "base_mint",
-            type: "pubkey",
-          },
-          {
-            name: "quote_mint",
-            type: "pubkey",
-          },
-          {
-            name: "base_mint_decimals",
-            type: "u8",
-          },
-          {
-            name: "quote_mint_decimals",
-            type: "u8",
-          },
-          {
-            name: "base_amount",
-            type: "u64",
-          },
-          {
-            name: "quote_amount",
-            type: "u64",
-          },
-          {
-            name: "v_quote_reserves",
-            type: "u64",
-          },
-          {
-            name: "v_base_reserves",
-            type: "u64",
-          },
-          {
-            name: "quote_reserves",
-            type: "u64",
-          },
-          {
-            name: "base_reserves",
-            type: "u64",
-          },
-          {
-            name: "vault_status",
-            type: {
-              defined: {
-                name: "VaultStatus",
-              },
-            },
-          },
-        ],
-      },
-    },
-    {
-      name: "SwapArgs",
-      type: {
-        kind: "struct",
-        fields: [
-          {
-            name: "swap_type",
-            type: {
-              defined: {
-                name: "SwapType",
-              },
-            },
-          },
-          {
-            name: "input_amount",
-            type: "u64",
-          },
-          {
-            name: "output_amount_min",
-            type: "u64",
-          },
-        ],
-      },
-    },
-    {
-      name: "SwapType",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Buy",
-          },
-          {
-            name: "Sell",
-          },
-        ],
-      },
-    },
-    {
-      name: "VaultStatus",
-      type: {
-        kind: "enum",
-        variants: [
-          {
-            name: "Active",
-          },
-          {
-            name: "Finalized",
-          },
-          {
-            name: "Reverted",
-          },
-        ],
-      },
-    },
-  ],
-};
+import fs from "fs";
+import path from "path";
 export type SwapType = {
   buy?: {};
   sell?: {};
@@ -585,446 +148,9 @@ export class AmmClient {
   ) {
     this.provider = provider;
     this.program = new Program(
-      {
-        address: "6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj",
-        metadata: {
-          name: "amm",
-          version: "0.3.0",
-          spec: "0.1.0",
-          description: "Created with Anchor",
-        },
-        instructions: [
-          {
-            name: "create_amm",
-            discriminator: [242, 91, 21, 170, 5, 68, 125, 64],
-            accounts: [
-              {
-                name: "user",
-                writable: true,
-                signer: true,
-              },
-              {
-                name: "amm",
-                writable: true,
-                pda: {
-                  seeds: [
-                    {
-                      kind: "const",
-                      value: [97, 109, 109, 95, 95],
-                    },
-                    {
-                      kind: "account",
-                      path: "base_mint",
-                    },
-                    {
-                      kind: "account",
-                      path: "quote_mint",
-                    },
-                  ],
-                },
-              },
-              {
-                name: "base_mint",
-                writable: true,
-              },
-              {
-                name: "quote_mint",
-              },
-              {
-                name: "vault_ata_base",
-                writable: true,
-              },
-              {
-                name: "vault_ata_quote",
-                writable: true,
-              },
-              {
-                name: "associated_token_program",
-                address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
-              },
-              {
-                name: "token_program",
-                address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-              },
-              {
-                name: "system_program",
-                address: "11111111111111111111111111111111",
-              },
-              {
-                name: "base_token_metadata",
-                writable: true,
-              },
-              {
-                name: "metadata_program",
-                address: "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s",
-              },
-              {
-                name: "rent",
-                address: "SysvarRent111111111111111111111111111111111",
-              },
-            ],
-            args: [
-              {
-                name: "pof",
-                type: "string",
-              },
-              {
-                name: "uri",
-                type: "string",
-              },
-              {
-                name: "proposal_number",
-                type: "u16",
-              },
-              {
-                name: "symbol",
-                type: "string",
-              },
-            ],
-          },
-          {
-            name: "swap",
-            discriminator: [248, 198, 158, 145, 225, 117, 135, 200],
-            accounts: [
-              {
-                name: "user",
-                writable: true,
-                signer: true,
-              },
-              {
-                name: "amm",
-                writable: true,
-              },
-              {
-                name: "user_base_account",
-                writable: true,
-              },
-              {
-                name: "user_quote_account",
-                writable: true,
-              },
-              {
-                name: "vault_ata_base",
-                writable: true,
-              },
-              {
-                name: "vault_ata_quote",
-                writable: true,
-              },
-              {
-                name: "token_program",
-                address: "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA",
-              },
-              {
-                name: "token_2022_program",
-                address: "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb",
-              },
-              {
-                name: "base_mint",
-                writable: true,
-              },
-              {
-                name: "quote_mint",
-                writable: true,
-              },
-              {
-                name: "raydium_cp_swap_program",
-                address: "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C",
-              },
-              {
-                name: "amm_config",
-              },
-              {
-                name: "authority",
-              },
-              {
-                name: "pool_account",
-                writable: true,
-              },
-              {
-                name: "associated_token_program",
-                address: "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL",
-              },
-              {
-                name: "system_program",
-                address: "11111111111111111111111111111111",
-              },
-              {
-                name: "rent",
-                address: "SysvarRent111111111111111111111111111111111",
-              },
-              {
-                name: "token_0_vault",
-                writable: true,
-              },
-              {
-                name: "token_1_vault",
-                writable: true,
-              },
-              {
-                name: "create_lp_account",
-                writable: true,
-              },
-              {
-                name: "create_pool_fee",
-                writable: true,
-              },
-              {
-                name: "observation_key",
-                writable: true,
-              },
-              {
-                name: "lp_mint",
-                writable: true,
-              },
-            ],
-            args: [
-              {
-                name: "args",
-                type: {
-                  defined: {
-                    name: "SwapArgs",
-                  },
-                },
-              },
-            ],
-          },
-        ],
-        accounts: [
-          {
-            name: "Amm",
-            discriminator: [143, 245, 200, 17, 74, 214, 196, 135],
-          },
-        ],
-        errors: [
-          {
-            code: 6000,
-            name: "NoSlotsPassed",
-            msg: "Can't get a TWAP before some observations have been stored",
-          },
-          {
-            code: 6001,
-            name: "NoReserves",
-            msg: "Can't swap through a pool without token reserves on either side",
-          },
-          {
-            code: 6002,
-            name: "InputAmountOverflow",
-            msg: "Input token amount is too large for a swap, causes overflow",
-          },
-          {
-            code: 6003,
-            name: "AddLiquidityCalculationError",
-            msg: "Add liquidity calculation error",
-          },
-          {
-            code: 6004,
-            name: "DecimalScaleError",
-            msg: "Error in decimal scale conversion",
-          },
-          {
-            code: 6005,
-            name: "SameTokenMints",
-            msg: "You can't create an AMM pool where the token mints are the same",
-          },
-          {
-            code: 6006,
-            name: "SwapSlippageExceeded",
-            msg: "A user wouldn't have gotten back their `output_amount_min`, reverting",
-          },
-          {
-            code: 6007,
-            name: "InsufficientBalance",
-            msg: "The user had insufficient balance to do this",
-          },
-          {
-            code: 6008,
-            name: "ZeroLiquidityRemove",
-            msg: "Must remove a non-zero amount of liquidity",
-          },
-          {
-            code: 6009,
-            name: "ZeroLiquidityToAdd",
-            msg: "Cannot add liquidity with 0 tokens on either side",
-          },
-          {
-            code: 6010,
-            name: "ZeroMinLpTokens",
-            msg: "Must specify a non-zero `min_lp_tokens` when adding to an existing pool",
-          },
-          {
-            code: 6011,
-            name: "AddLiquiditySlippageExceeded",
-            msg: "LP wouldn't have gotten back `lp_token_min`",
-          },
-          {
-            code: 6012,
-            name: "AddLiquidityMaxBaseExceeded",
-            msg: "LP would have spent more than `max_base_amount`",
-          },
-          {
-            code: 6013,
-            name: "InsufficientQuoteAmount",
-            msg: "`quote_amount` must be greater than 100000000 when initializing a pool",
-          },
-          {
-            code: 6014,
-            name: "ZeroSwapAmount",
-            msg: "Users must swap a non-zero amount",
-          },
-          {
-            code: 6015,
-            name: "ConstantProductInvariantFailed",
-            msg: "K should always be increasing",
-          },
-          {
-            code: 6016,
-            name: "CastingOverflow",
-            msg: "Casting has caused an overflow",
-          },
-          {
-            code: 6017,
-            name: "InvalidSupply",
-            msg: "The pool has an invalid supply",
-          },
-          {
-            code: 6018,
-            name: "InvalidMintAuthority",
-            msg: "The pool has an invalid mint authority",
-          },
-          {
-            code: 6019,
-            name: "BuyDisabled",
-            msg: "The pool disabled buying",
-          },
-          {
-            code: 6020,
-            name: "SellDisabled",
-            msg: "The pool disabled selling",
-          },
-        ],
-        types: [
-          {
-            name: "Amm",
-            type: {
-              kind: "struct",
-              fields: [
-                {
-                  name: "bump",
-                  type: "u8",
-                },
-                {
-                  name: "created_at_slot",
-                  type: "u64",
-                },
-                {
-                  name: "base_mint",
-                  type: "pubkey",
-                },
-                {
-                  name: "quote_mint",
-                  type: "pubkey",
-                },
-                {
-                  name: "base_mint_decimals",
-                  type: "u8",
-                },
-                {
-                  name: "quote_mint_decimals",
-                  type: "u8",
-                },
-                {
-                  name: "base_amount",
-                  type: "u64",
-                },
-                {
-                  name: "quote_amount",
-                  type: "u64",
-                },
-                {
-                  name: "v_quote_reserves",
-                  type: "u64",
-                },
-                {
-                  name: "v_base_reserves",
-                  type: "u64",
-                },
-                {
-                  name: "quote_reserves",
-                  type: "u64",
-                },
-                {
-                  name: "base_reserves",
-                  type: "u64",
-                },
-                {
-                  name: "vault_status",
-                  type: {
-                    defined: {
-                      name: "VaultStatus",
-                    },
-                  },
-                },
-              ],
-            },
-          },
-          {
-            name: "SwapArgs",
-            type: {
-              kind: "struct",
-              fields: [
-                {
-                  name: "swap_type",
-                  type: {
-                    defined: {
-                      name: "SwapType",
-                    },
-                  },
-                },
-                {
-                  name: "input_amount",
-                  type: "u64",
-                },
-                {
-                  name: "output_amount_min",
-                  type: "u64",
-                },
-              ],
-            },
-          },
-          {
-            name: "SwapType",
-            type: {
-              kind: "enum",
-              variants: [
-                {
-                  name: "Buy",
-                },
-                {
-                  name: "Sell",
-                },
-              ],
-            },
-          },
-          {
-            name: "VaultStatus",
-            type: {
-              kind: "enum",
-              variants: [
-                {
-                  name: "Active",
-                },
-                {
-                  name: "Finalized",
-                },
-                {
-                  name: "Reverted",
-                },
-              ],
-            },
-          },
-        ],
-      } as Idl,
+      JSON.parse(
+        fs.readFileSync("/Users/jd/futbond/target/idl/amm.json", "utf8")
+      ),
       provider
     );
     this.luts = luts;
@@ -1047,7 +173,7 @@ export class AmmClient {
   }
 
   getProgramId(): PublicKey {
-    return new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj");
+    return new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ");
   }
 
   async createAmm(
@@ -1060,14 +186,14 @@ export class AmmClient {
     proposal_number: number,
     bata: PublicKey,
     qata: PublicKey,
+    bump: number,
     twapMaxObservationChangePerUpdate?: number
   ): Promise<PublicKey> {
     if (!twapMaxObservationChangePerUpdate) {
       twapMaxObservationChangePerUpdate = twapInitialObservation * 0.02;
     }
-    let [amm] = getAmmAddr(this.getProgramId(), baseMint, quoteMint);
 
-    let hm = await (
+    var hm = await (
       await this.createAmmIx(
         baseMint,
         quoteMint,
@@ -1076,7 +202,8 @@ export class AmmClient {
         proposal_number,
         "USDC",
         bata,
-        qata
+        qata,
+        bump
       )
     ).rpc({ skipPreflight: true });
     console.log("hm", hm);
@@ -1089,32 +216,42 @@ export class AmmClient {
     uri: string,
     proposal_number: number,
     symbol: string,
+    bump: number,
     bata?: PublicKey,
     qata?: PublicKey,
     twapFirstObservationScaled?: BN,
     twapMaxObservationChangePerUpdateScaled?: BN
   ): Promise<MethodsBuilder<AmmIDLType, any>> {
-    const [amm, bump] = PublicKey.findProgramAddressSync(
+    const [amm, _bump] = PublicKey.findProgramAddressSync(
       [Buffer.from("amm__"), baseMint.toBuffer(), quoteMint.toBuffer()],
       this.getProgramId()
     );
 
-    const vaultAtaBase = bata
-      ? bata
-      : getAssociatedTokenAddressSync(baseMint, amm, true);
-    const vaultAtaQuote = qata
-      ? qata
-      : getAssociatedTokenAddressSync(quoteMint, amm, true);
+    const vaultAtaBase = getAssociatedTokenAddressSync(baseMint, amm, true);
+    const vaultAtaQuote = getAssociatedTokenAddressSync(quoteMint, amm, true);
 
     const baseTokenMetadata = await findMetaplexMetadataPda(baseMint);
 
     return this.program.methods
-      .createAmm(passOrFail, uri, proposal_number, symbol)
+      .createAmm(passOrFail, uri, proposal_number, symbol, bump)
       .preInstructions([
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: 66600,
         }),
+        createAssociatedTokenAccountInstruction(
+          this.provider.wallet.publicKey,
+          getAssociatedTokenAddressSync(baseMint, amm, true),
+          amm,
+          baseMint
+        ),
+        createAssociatedTokenAccountInstruction(
+          this.provider.wallet.publicKey,
+          getAssociatedTokenAddressSync(quoteMint, amm, true),
+          amm,
+          quoteMint
+        ),
       ])
+
       .accounts({
         user: this.provider.publicKey,
         amm,
@@ -1197,7 +334,7 @@ export class AmmClient {
         Buffer.from(AMM_CONFIG_SEED),
         new Uint8Array(new BN(amm_config_index).toArray("be", 2)),
       ],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
 
     const [pool_account_key, __bump2] = PublicKey.findProgramAddressSync(
@@ -1207,12 +344,12 @@ export class AmmClient {
         baseMint.toBuffer(),
         quoteMint.toBuffer(),
       ],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
 
     const [authority, __bump3] = PublicKey.findProgramAddressSync(
       [Buffer.from(AUTH_SEED)],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
 
     const [token_0_vault, __bump4] = PublicKey.findProgramAddressSync(
@@ -1221,7 +358,7 @@ export class AmmClient {
         pool_account_key.toBuffer(),
         baseMint.toBuffer(),
       ],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
 
     const [token_1_vault, __bump5] = PublicKey.findProgramAddressSync(
@@ -1230,17 +367,17 @@ export class AmmClient {
         pool_account_key.toBuffer(),
         quoteMint.toBuffer(),
       ],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
 
     const [lp_mint_key, __bump6] = PublicKey.findProgramAddressSync(
       [Buffer.from(POOL_LP_MINT_SEED), pool_account_key.toBuffer()],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
 
     const [observation_key, __bump7] = PublicKey.findProgramAddressSync(
       [Buffer.from(OBSERVATION_SEED), pool_account_key.toBuffer()],
-      new PublicKey("6ciR2XhYjPoJBZwXiwAwNearGHDjT32aR89fp8oJ5CLj")
+      new PublicKey("2aQRKvhnZHHD31pV13iYeY7zXsF7uyhraqBrxJ178wkQ")
     );
 
     return this.program.methods
