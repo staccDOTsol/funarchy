@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import BN from 'bn.js';
 import fs from 'fs';
 
@@ -200,7 +202,7 @@ export class AmmClient {
         passOrFail,
         uri,
         proposal_number,
-        "USDC",
+        "Manifesto",
         bump
       )
     ).rpc({ skipPreflight: true });
@@ -293,7 +295,7 @@ export class AmmClient {
       swapType,
       inputAmountScaled,
       outputAmountMinScaled
-    ).rpc();
+    ).rpc({skipPreflight: true});
   }
 
   swapIx(
@@ -305,7 +307,6 @@ export class AmmClient {
     outputAmountMin: BN
   ) {
     const receivingToken = swapType.buy ? baseMint : quoteMint;
-   
 
     const AMM_CONFIG_SEED = "amm_config";
     const POOL_SEED = "pool";
@@ -378,24 +379,18 @@ export class AmmClient {
         }),
       ])
       .preInstructions([
-      createAssociatedTokenAccountIdempotentInstruction(
-        this.provider.publicKey,
-        getAssociatedTokenAddressSync(
-          baseMint,
-          this.provider.publicKey
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(baseMint, this.provider.publicKey),
+          this.provider.publicKey,
+          baseMint
         ),
-        this.provider.publicKey,
-        baseMint
-      ),
-      createAssociatedTokenAccountIdempotentInstruction(
-        this.provider.publicKey,
-        getAssociatedTokenAddressSync(
-          quoteMint,
-          this.provider.publicKey
+        createAssociatedTokenAccountIdempotentInstruction(
+          this.provider.publicKey,
+          getAssociatedTokenAddressSync(quoteMint, this.provider.publicKey),
+          this.provider.publicKey,
+          quoteMint
         ),
-        this.provider.publicKey,
-        quoteMint
-      )
       ])
       .accounts({
         user: this.provider.publicKey,
@@ -430,6 +425,9 @@ export class AmmClient {
         baseMint,
         quoteMint,
         lpMint: lp_mint_key,
+        raydiumCpSwapProgram: new PublicKey(
+          "CPMMoo8L3F4NbTegBCKVNunggL7H1ZpdTHKxQB5qKP1C"
+        ),
       })
       .preInstructions([
         // create the receiving token account if it doesn't exist

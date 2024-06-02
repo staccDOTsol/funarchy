@@ -1,3 +1,4 @@
+// @ts-nocheck
 import BN from 'bn.js';
 
 // @ts-nocheck
@@ -340,7 +341,7 @@ export class AutocratClient {
             "p",
             passUri,
             nonce.toNumber(),
-            "USDC",
+            "Manifesto",
             bump1
           ),
           await this.ammClient.createAmmIx(
@@ -350,7 +351,7 @@ export class AutocratClient {
             failUri,
             nonce.toNumber(),
 
-            "USDC",
+            "Manifesto",
             bump2
           )
         )

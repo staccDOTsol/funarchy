@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey } from '@solana/web3.js';
 
 export const AUTOCRAT_PROGRAM_ID = new PublicKey(
   "DyzquJrx55eW3wuVqqWM8jz7WTkwG2U77nZGYnLWucFz"
@@ -18,7 +18,7 @@ export const META_MINT = new PublicKey(
   "3gN1WVEJwSHNWjo7hr87DgZp6zkf8kWgAJD29DmfE2Gr"
 );
 export const MAINNET_USDC = new PublicKey(
-  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+  "StaccN8ycAamAmZgijj9B7wKHwUEF17XN3vrNx1pQ6Z"
 );
 
 export const USDC_DECIMALS = 6;
