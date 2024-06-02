@@ -75,7 +75,6 @@ impl CreateAmm<'_> {
             base_mint,
             quote_mint,
             base_token_metadata,
-            token_program,
             ..
         } = ctx.accounts;
         let current_slot = Clock::get()?.slot;
@@ -121,18 +120,6 @@ impl CreateAmm<'_> {
                 true,
                 None,
             )?;
-        anchor_spl::token::mint_to(
-            CpiContext::new_with_signer(
-                token_program.to_account_info(),
-                MintTo {
-                    to: ctx.accounts.vault_ata_base.to_account_info(),
-                    mint: base_mint.to_account_info(),
-                    authority: ctx.accounts.amm.to_account_info(),
-                },
-                &[signer_seeds]
-            ),
-            (1_000_000_000_u128 * 10_u128.pow(base_mint.decimals as u32)) as u64,
-        )?;
         
         let amm = &mut ctx.accounts.amm.load_init()?;
 
@@ -146,14 +133,9 @@ impl CreateAmm<'_> {
         amm.base_mint_decimals = base_mint.decimals;
         amm.quote_mint_decimals = quote_mint.decimals;
 
-        amm.base_amount = 0;
-        amm.quote_amount = 0;
-
         amm.v_base_reserves = (1_000_000_000_u128 * 10_u128.pow(base_mint.decimals as u32)) as u64;
         amm.v_quote_reserves = (10_u128 * 10_u128.pow(quote_mint.decimals as u32)) as u64;
-        amm.base_reserves = (1_000_000_000_u128 * 10_u128.pow(base_mint.decimals as u32)) as u64;
-        amm.quote_reserves = 0;
-        amm.vault_status = 0;
+      amm.vault_status = 0;
 
         Ok(())
     }

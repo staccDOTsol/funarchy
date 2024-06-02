@@ -4,7 +4,7 @@ use anchor_spl::token::{self, *};
 use anchor_spl::token_2022::Token2022;
 use raydium_cp_swap::cpi::accounts::Initialize;
 use raydium_cp_swap::program::RaydiumCpSwap;
-use crate::{generate_amm_seeds, AMM_SEED_PREFIX};
+use crate::{AMM_SEED_PREFIX};
 use crate::error::AmmError;
 use crate::{Amm, SwapType};
 
@@ -104,7 +104,7 @@ impl Swap<'_> {
                 input_amount,
                 AmmError::InsufficientBalance
             ),
-            SwapType::Sell => require_gte!(
+            SwapType::Sell => require_gte!( 
                 accounts.user_base_account.amount,
                 input_amount,
                 AmmError::InsufficientBalance
@@ -113,13 +113,17 @@ impl Swap<'_> {
 
         require!(input_amount > 0, AmmError::ZeroSwapAmount);
 
-        let amm_clone = &accounts.amm.load()?; 
-        let signer_seeds = generate_amm_seeds!(amm_clone);
-        let output_amount = {
-            let amm = &mut accounts.amm.load_mut()?;
-            amm.swap(input_amount, swap_type)?
+        let signer_seeds = {
+            &[
+                AMM_SEED_PREFIX,
+                accounts.base_mint.to_account_info().key.as_ref(),
+                accounts.quote_mint.to_account_info().key.as_ref(),
+                &[accounts.amm.load()?.bump],
+            ]
         };
-
+        let output_amount = {
+            accounts.amm.load_mut()?.swap(input_amount, swap_type)?
+        };
         let (user_from, vault_to, vault_from, user_to) = match swap_type {
             SwapType::Buy => (
                 accounts.user_quote_account.clone(),
@@ -139,22 +143,15 @@ impl Swap<'_> {
             SwapType::Buy => 
             {
                 
-                if accounts.amm.load()?.base_reserves as i64 -  output_amount as i64 <= 0 {
-                    token::mint_to(
-                        CpiContext::new_with_signer(
-                            accounts.token_program.to_account_info(),
-                            MintTo {
-                                to: accounts.vault_ata_base.clone().to_account_info(),
-                                mint: accounts.base_mint.to_account_info(),
-                                authority: accounts.amm.to_account_info(),
-                            },
-                            &[signer_seeds]
-                        ),
-                        (1_000_000_000_u128 * 10_u128.pow(accounts.base_mint.decimals as u32) )as u64,
-                    )?;
-
-                    let mint0 = accounts.amm.load()?.base_mint.clone().key();
-                    let mint1 = accounts.amm.load()?.quote_mint.key();
+                if accounts.amm.load()?.v_base_reserves as i64 -  output_amount as i64 <= 0 {
+                  { 
+                    let amm = &mut accounts.amm.load_mut()?;
+                    amm.v_base_reserves = (1_000_000_000_u128 * 10_u128.pow(accounts.base_mint.decimals as u32)) as u64;
+                    amm.v_quote_reserves = (10_u128 * 10_u128.pow(accounts.quote_mint.decimals as u32)) as u64;
+                  
+                  }
+                    let mint0 = accounts.base_mint.clone().key();
+                    let mint1 = accounts.quote_mint.key();
                     let init_amount_0 = accounts.vault_ata_base.amount;
                     let init_amount_1 = accounts.vault_ata_quote.amount;
                     let (mint0, mint1, init_amount_0, init_amount_1, user_token_0_account, user_token_1_account, token_0_program, token_1_program) = if mint0 > mint1 {
@@ -216,14 +213,6 @@ impl Swap<'_> {
 
                     ).unwrap();
                 }
-            { 
-                let amm = & mut accounts.amm.load_mut()?;
-                
-                amm.v_base_reserves -= output_amount / 10_u64.pow(amm.base_mint_decimals as u32);
-                amm.base_reserves -= output_amount;
-                amm.v_quote_reserves += input_amount / 10_u64.pow(amm.quote_mint_decimals as u32);
-                amm.quote_reserves += input_amount;
-            }
 
                 token::transfer(
                     CpiContext::new(
@@ -252,13 +241,7 @@ impl Swap<'_> {
 
             }
             SwapType::Sell => {
-                let amm = &mut accounts.amm.load_mut()?;
-                // update the bonding curve parameters
-                amm.v_base_reserves += input_amount;
-                amm.base_reserves += input_amount;
-                amm.v_quote_reserves -= output_amount;
-                amm.quote_reserves -= output_amount;
-
+                {
                 token::transfer(
                     CpiContext::new_with_signer(
                         accounts.token_program.to_account_info(),
@@ -273,15 +256,15 @@ impl Swap<'_> {
                 )?;
 
                 token::burn(
-                    CpiContext::new_with_signer(
+                    CpiContext::new(
                         accounts.token_program.to_account_info(),
                         Burn {
                             from: user_from.to_account_info(),
                             mint: accounts.base_mint.to_account_info(),
-                            authority: accounts.amm.to_account_info(),
+                            authority: accounts.user.to_account_info(),
                         },
                         
-                        &[signer_seeds]
+                        
                     ),
                     input_amount,
                 )?;

@@ -1,37 +1,39 @@
-import * as anchor from "@coral-xyz/anchor";
-import * as token from "@solana/spl-token";
-const { BN, Program } = anchor;
-import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
-
+import * as anchor from '@coral-xyz/anchor';
+import {
+  MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
+} from '@metaplex-foundation/mpl-token-metadata';
+import { toWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters';
 import {
   OpenBookV2Client,
-  PlaceOrderArgs,
-  Side,
   OrderType,
+  PlaceOrderArgs,
   SelfTradeBehavior,
-} from "@openbook-dex/openbook-v2";
-import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
+  Side,
+} from '@openbook-dex/openbook-v2';
+import * as token from '@solana/spl-token';
 import {
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
-  SYSVAR_RENT_PUBKEY,
   SystemProgram,
+  SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
-} from "@solana/web3.js";
+} from '@solana/web3.js';
 
+import { AutocratMigrator } from '../target/types/autocrat_migrator';
+import { AutocratV0 } from '../target/types/autocrat_v0';
+import {
+  ConditionalVault,
+  IDL as ConditionalVaultIDL,
+} from '../target/types/conditional_vault';
+import { OpenbookTwap } from '../tests/fixtures/openbook_twap';
 import {
   fetchOnchainMetadataForMint,
   uploadOffchainMetadata,
-} from "./uploadOffchainMetadata";
-import { AutocratV0 } from "../target/types/autocrat_v0";
-import {
-  IDL as ConditionalVaultIDL,
-  ConditionalVault,
-} from "../target/types/conditional_vault";
-import { OpenbookTwap } from "../tests/fixtures/openbook_twap";
-import { AutocratMigrator } from "../target/types/autocrat_migrator";
+} from './uploadOffchainMetadata';
+
+const { BN, Program } = anchor;
 
 const AutocratIDL: AutocratV0 = require("../target/idl/autocrat_v0.json");
 const OpenbookTwapIDL: OpenbookTwap = require("../tests/fixtures/openbook_twap.json");
@@ -57,7 +59,7 @@ export const DEVNET_USDC = new PublicKey(
   "B9CZDrwg7d34MiPiWoUSmddriCtQB5eB2h9EUSDHt48b"
 );
 export const USDC = new PublicKey(
-  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+  "StaccN8ycAamAmZgijj9B7wKHwUEF17XN3vrNx1pQ6Z"
 );
 export const PROPH3t_PUBKEY = new PublicKey(
   "65U66fcYuNfqN12vzateJhZ4bgDuxFWN9gMwraeQKByg"

@@ -1,4 +1,4 @@
-import { PublicKey } from "@solana/web3.js";
+import { PublicKey } from '@solana/web3.js';
 
 // DAO Tokens
 // DeansList
@@ -30,7 +30,7 @@ export const DEVNET_USDC = new PublicKey(
 );
 // Circle USDC Mainnet
 export const USDC = new PublicKey(
-  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+  "StaccN8ycAamAmZgijj9B7wKHwUEF17XN3vrNx1pQ6Z"
 );
 
 export const DEVNET_DARK = new PublicKey(

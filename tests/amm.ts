@@ -1,3 +1,5 @@
+// @ts-nocheck
+
 import { assert } from 'chai';
 
 import * as anchor from '@coral-xyz/anchor';
@@ -5,6 +7,7 @@ import {
   AnchorProvider,
   BN,
 } from '@coral-xyz/anchor';
+import { MAINNET_USDC as USDC } from '@metadaoproject/futarchy';
 import {
   getAssociatedTokenAddressSync,
   getOrCreateAssociatedTokenAccount,
@@ -15,7 +18,6 @@ import {
   PublicKey,
 } from '@solana/web3.js';
 
-import { DEVNET_USDC as USDC } from '../scripts/consts';
 import {
   AmmClient,
   createMint,
@@ -137,10 +139,8 @@ console.log(bata)
       assert.equal(ammAcc.bump, bump);
       assert.equal(ammAcc.baseMint.toBase58(), META.toBase58());
       assert.equal(ammAcc.quoteMint.toBase58(), USDC.toBase58());
-      assert.equal(ammAcc.baseMintDecimals, 9);
+      assert.equal(ammAcc.baseMintDecimals, 6);
       assert.equal(ammAcc.quoteMintDecimals, 6);
-      assert.isTrue(ammAcc.baseAmount.eqn(0));
-      assert.isTrue(ammAcc.quoteAmount.eqn(0));
     });
 
     it("fails to create an amm with two identical mints", async function () {
@@ -168,7 +168,7 @@ console.log(bata)
           "http://google.com",
           0,
 
-        "USDC",
+        "Manifesto",
         bump
         ))
         .rpc()
@@ -179,7 +179,7 @@ console.log(bata)
   describe("#swap", async function () {
     beforeEach(async function () {
       await ammClient
-        .swap(amm, { buy: {} }, 10_000_000, 1)
+        .swap(amm, { buy: {} }, 0.01, 1)
     });
 
     it("fails when you have insufficient balance", async () => {
@@ -189,11 +189,19 @@ console.log(bata)
       );
 
       await ammClient
-        .swap(amm, { buy: {} }, 10_000_000, 1)
+        .swap(amm, { buy: {} }, 0.01, 1)
         .then(callbacks[0], callbacks[1]);
+        await ammClient
+          .swap(amm, { buy: {} }, 0.01, 1)
+          .then(callbacks[0], callbacks[1]);
+
+          await ammClient
+          .swap(amm, { buy: {} }, 0.01, 1)
+          .then(callbacks[0], callbacks[1]);
+    
 
       await ammClient
-        .swap(amm, { sell: {} }, 100_000, 1)
+        .swap(amm, { sell: {} }, 1, 1)
         .then(callbacks[0], callbacks[1]);
     });
 
@@ -213,8 +221,8 @@ console.log(bata)
       let sim = ammClient.simulateSwap(
         new BN(100 * 10 ** 6),
         { buy: {} },
-        storedAmm.baseAmount,
-        storedAmm.quoteAmount
+        storedAmm.vBaseReserves,
+        storedAmm.vQuoteReserves
       );
       assert.equal(
         sim.expectedOut.toString(),
@@ -228,10 +236,10 @@ console.log(bata)
       );
 
       await ammClient
-        .swap(amm, { buy: {} }, 100, expectedOut + 0.000000001)
+        .swap(amm, { buy: {} }, 0.01, expectedOut + 0.000000001)
         .then(callbacks[0], callbacks[1]);
 
-      await ammClient.swap(amm, { buy: {} }, 100, expectedOut);
+      await ammClient.swap(amm, { buy: {} }, 0.01, expectedOut);
 
     });
 
@@ -281,8 +289,8 @@ console.log(bata)
 
       const ammMiddle = await ammClient.getAmm(amm);
       let quoteReceived =
-        permissionlessAmmStart.quoteAmount.toNumber() -
-        ammMiddle.quoteAmount.toNumber();
+        permissionlessAmmStart.vQuoteReserves.toNumber() -
+        ammMiddle.vQuoteReserves.toNumber();
 
       await ammClient
         .swapIx(amm, META, USDC, { buy: {} }, new BN(quoteReceived), new BN(1))
@@ -292,8 +300,8 @@ console.log(bata)
         amm
       );
       let baseReceived =
-        ammMiddle.baseAmount.toNumber() -
-        permissionlessAmmEnd.baseAmount.toNumber();
+        ammMiddle.vBaseReserves.toNumber() -
+        permissionlessAmmEnd.vBaseReserves.toNumber();
 
       assert.isBelow(baseReceived, startingBaseSwapAmount);
       assert.isAbove(baseReceived, startingBaseSwapAmount * 0.98); // 1% swap fee both ways
@@ -317,7 +325,7 @@ console.log(bata)
 
       const ammMiddle = await ammClient.getAmm(amm);
       let baseReceived =
-        ammStart.baseAmount.toNumber() - ammMiddle.baseAmount.toNumber();
+        ammStart.vBaseReserves.toNumber() - ammMiddle.vBaseReserves.toNumber();
 
       await ammClient
         .swapIx(amm, META, USDC, { sell: {} }, new BN(baseReceived), new BN(1))
@@ -325,7 +333,7 @@ console.log(bata)
 
       const ammEnd = await ammClient.getAmm(amm);
       let quoteReceived =
-        ammMiddle.quoteAmount.toNumber() - ammEnd.quoteAmount.toNumber();
+        ammMiddle.vQuoteReserves.toNumber() - ammEnd.vQuoteReserves.toNumber();
 
       assert.isBelow(quoteReceived, startingQuoteSwapAmount);
       assert.isAbove(quoteReceived, startingQuoteSwapAmount * 0.98);
