@@ -1,37 +1,39 @@
-import * as anchor from "@coral-xyz/anchor";
-import * as token from "@solana/spl-token";
-const { BN, Program } = anchor;
-import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
-
+import * as anchor from '@coral-xyz/anchor';
+import {
+  MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
+} from '@metaplex-foundation/mpl-token-metadata';
+import { toWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters';
 import {
   OpenBookV2Client,
-  PlaceOrderArgs,
-  Side,
   OrderType,
+  PlaceOrderArgs,
   SelfTradeBehavior,
-} from "@openbook-dex/openbook-v2";
-import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
+  Side,
+} from '@openbook-dex/openbook-v2';
+import * as token from '@solana/spl-token';
 import {
   ComputeBudgetProgram,
   Keypair,
   PublicKey,
-  SYSVAR_RENT_PUBKEY,
   SystemProgram,
+  SYSVAR_RENT_PUBKEY,
   Transaction,
   TransactionInstruction,
-} from "@solana/web3.js";
+} from '@solana/web3.js';
 
+import { AutocratMigrator } from '../target/types/autocrat_migrator';
+import { AutocratV0 } from '../target/types/autocrat_v0';
+import {
+  ConditionalVault,
+  IDL as ConditionalVaultIDL,
+} from '../target/types/conditional_vault';
+import { OpenbookTwap } from '../tests/fixtures/openbook_twap';
 import {
   fetchOnchainMetadataForMint,
   uploadOffchainMetadata,
-} from "./uploadOffchainMetadata";
-import { AutocratV0 } from "../target/types/autocrat_v0";
-import {
-  IDL as ConditionalVaultIDL,
-  ConditionalVault,
-} from "../target/types/conditional_vault";
-import { OpenbookTwap } from "../tests/fixtures/openbook_twap";
-import { AutocratMigrator } from "../target/types/autocrat_migrator";
+} from './uploadOffchainMetadata';
+
+const { BN, Program } = anchor;
 
 const AutocratIDL: AutocratV0 = require("../target/idl/autocrat_v0.json");
 const OpenbookTwapIDL: OpenbookTwap = require("../tests/fixtures/openbook_twap.json");
@@ -57,7 +59,7 @@ export const DEVNET_USDC = new PublicKey(
   "B9CZDrwg7d34MiPiWoUSmddriCtQB5eB2h9EUSDHt48b"
 );
 export const USDC = new PublicKey(
-  "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+  "StaccN8ycAamAmZgijj9B7wKHwUEF17XN3vrNx1pQ6Z"
 );
 export const PROPH3t_PUBKEY = new PublicKey(
   "65U66fcYuNfqN12vzateJhZ4bgDuxFWN9gMwraeQKByg"
@@ -197,7 +199,11 @@ async function generateAddMetadataToConditionalTokensIx(
       passTokenMetadataUri,
       failTokenMetadataUri
     )
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       payer: payer.publicKey,
       vault,
       underlyingTokenMint: mint,
@@ -254,7 +260,11 @@ async function initializeVault(
 
   const initializeConditionalVaultBuilder = vaultProgram.methods
     .initializeConditionalVault(settlementAuthority, nonce)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       vault,
       underlyingTokenMint,
       vaultUnderlyingTokenAccount,
@@ -302,7 +312,11 @@ async function initializeVault(
 // export async function initializeDAO(META: any, USDC: any) {
 //   await autocratProgram.methods
 //     .initializeDao()
-//     .accounts({
+//     .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
 //       dao,
 //       metaMint: META,
 //       usdcMint: USDC,
@@ -351,7 +365,11 @@ export async function fetchDao() {
 
 //   const ix = await migrator.methods
 //         .multiTransfer2()
-//         .accounts({
+//         .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
 //           authority: daoTreasury,
 //           from0: treasuryMetaAccount.address,
 //           to0: newTreasuryMetaAccount.address,
@@ -369,7 +387,11 @@ export async function fetchDao() {
 
 //   let tx = await autocratProgram.methods
 //         .finalizeProposal()
-//         .accounts({
+//         .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
 //           proposal,
 //           openbookTwapPassMarket: storedProposal.openbookTwapPassMarket,
 //           openbookTwapFailMarket: storedProposal.openbookTwapFailMarket,
@@ -445,7 +467,7 @@ export async function initializeProposal(
   );
 
   const currentTimeInSeconds = Math.floor(Date.now() / 1000);
-  const elevenDaysInSeconds = 11 * 24 * 60 * 60;
+  const elevenDaysInSeconds = 4 * 24 * 60 * 60;
   const expiryTime = new BN(currentTimeInSeconds + elevenDaysInSeconds);
   const quoteLotSize = new BN(100);
   const baseLotSize = new BN(1e8);
@@ -542,14 +564,22 @@ export async function initializeProposal(
       ),
       await openbookTwap.methods
         .createTwapMarket(new BN(10_000), maxObservationChangePerUpdateLots)
-        .accounts({
+        .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
           market: openbookPassMarketKP.publicKey,
           twapMarket: openbookTwapPassMarket,
         })
         .instruction(),
       await openbookTwap.methods
         .createTwapMarket(new BN(10_000), maxObservationChangePerUpdateLots)
-        .accounts({
+        .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
           market: openbookFailMarketKP.publicKey,
           twapMarket: openbookTwapFailMarket,
         })
@@ -557,7 +587,11 @@ export async function initializeProposal(
       cuPriceIx,
       cuLimitIx,
     ])
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       proposal: proposalKeypair.publicKey,
       dao,
       daoTreasury,
@@ -628,7 +662,11 @@ async function placeOrdersOnBothSides(twapMarket: any) {
 
   await openbookTwap.methods
     .placeOrder(buyArgs)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       asks: storedMarket.asks,
       bids: storedMarket.bids,
       marketVault: storedMarket.marketQuoteVault,
@@ -643,7 +681,11 @@ async function placeOrdersOnBothSides(twapMarket: any) {
 
   await openbookTwap.methods
     .placeOrder(sellArgs)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       asks: storedMarket.asks,
       bids: storedMarket.bids,
       marketVault: storedMarket.marketBaseVault,
@@ -699,7 +741,11 @@ async function placeTakeOrder(twapMarket: any) {
 
   let tx = await openbookTwap.methods
     .placeTakeOrder(buyArgs)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       asks: storedMarket.asks,
       bids: storedMarket.bids,
       eventHeap: storedMarket.eventHeap,
@@ -773,7 +819,11 @@ export async function mintConditionalTokens(amount: number, vault: PublicKey) {
   // Mint conditional tokens
   await vaultProgram.methods
     .mintConditionalTokens(bnAmount)
-    .accounts({
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({
       authority: payer.publicKey,
       vault,
       vaultUnderlyingTokenAccount,

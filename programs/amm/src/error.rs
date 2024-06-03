@@ -36,4 +36,12 @@ pub enum AmmError {
     ConstantProductInvariantFailed,
     #[msg("Casting has caused an overflow")]
     CastingOverflow,
+    #[msg("The pool has an invalid supply")]
+    InvalidSupply,
+    #[msg("The pool has an invalid mint authority")]
+    InvalidMintAuthority,
+    #[msg("The pool disabled buying")]
+    BuyDisabled,
+    #[msg("The pool disabled selling")]
+    SellDisabled,
 }

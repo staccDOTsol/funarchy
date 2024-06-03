@@ -25,11 +25,7 @@
 //!   instruction by calling `execute_proposal`.
 use anchor_lang::prelude::*;
 use anchor_lang::solana_program;
-use anchor_spl::token::{self, Mint, Token, TokenAccount, Transfer};
-use conditional_vault::cpi::accounts::SettleConditionalVault;
-use conditional_vault::program::ConditionalVault as ConditionalVaultProgram;
-use conditional_vault::ConditionalVault as ConditionalVaultAccount;
-use conditional_vault::VaultStatus;
+use anchor_spl::token::Mint;
 
 pub mod error;
 pub mod instructions;
@@ -58,12 +54,12 @@ security_txt! {
     acknowledgements: "DCF = (CF1 / (1 + r)^1) + (CF2 / (1 + r)^2) + ... (CFn / (1 + r)^n)"
 }
 
-declare_id!("autoQP9RmUNkzzKRXsMkWicDVZ3h29vvyMDcAYjCxxg");
+declare_id!("DyzquJrx55eW3wuVqqWM8jz7WTkwG2U77nZGYnLWucFz");
 
 pub const SLOTS_PER_10_SECS: u64 = 25;
-pub const THREE_DAYS_IN_SLOTS: u64 = 3 * 24 * 60 * 6 * SLOTS_PER_10_SECS;
+pub const THREE_DAYS_IN_SLOTS: u64 = 24 * 60 * 6 * SLOTS_PER_10_SECS;
 
-pub const TEN_DAYS_IN_SECONDS: i64 = 10 * 24 * 60 * 60;
+pub const TEN_DAYS_IN_SECONDS: i64 = 3 * 24 * 60 * 60;
 
 // by default, the pass price needs to be 3% higher than the fail price
 pub const DEFAULT_PASS_THRESHOLD_BPS: u16 = 300;

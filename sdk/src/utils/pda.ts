@@ -1,14 +1,8 @@
-import { AccountMeta, PublicKey } from "@solana/web3.js";
-import { utils } from "@coral-xyz/anchor";
-import {
-  ASSOCIATED_TOKEN_PROGRAM_ID,
-  TOKEN_PROGRAM_ID,
-} from "@solana/spl-token";
 import BN from "bn.js";
-import {
-  fromWeb3JsPublicKey,
-  toWeb3JsPublicKey,
-} from "@metaplex-foundation/umi-web3js-adapters";
+
+import * as anchor from "@coral-xyz/anchor";
+import { PublicKey } from "@solana/web3.js";
+
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "../constants";
 
 export const getVaultAddr = (
@@ -18,7 +12,7 @@ export const getVaultAddr = (
 ) => {
   return PublicKey.findProgramAddressSync(
     [
-      utils.bytes.utf8.encode("conditional_vault"),
+      Buffer.from("conditional_vault"),
       settlementAuthority.toBuffer(),
       underlyingTokenMint.toBuffer(),
     ],
@@ -36,7 +30,7 @@ export const getVaultFinalizeMintAddr = (
 export const getMetadataAddr = (mint: PublicKey) => {
   return PublicKey.findProgramAddressSync(
     [
-      utils.bytes.utf8.encode("metadata"),
+      Buffer.from("metadata"),
       MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
       mint.toBuffer(),
     ],
@@ -57,7 +51,7 @@ const getVaultMintAddr = (
   seed: string
 ) => {
   return PublicKey.findProgramAddressSync(
-    [utils.bytes.utf8.encode(seed), vault.toBuffer()],
+    [Buffer.from(seed), vault.toBuffer()],
     programId
   );
 };
@@ -76,7 +70,7 @@ export const getProposalAddr = (
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
-      utils.bytes.utf8.encode("proposal"),
+      Buffer.from("proposal"),
       proposer.toBuffer(),
       nonce.toArrayLike(Buffer, "le", 8),
     ],
@@ -91,11 +85,11 @@ export const getAmmAddr = (
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
     [
-      utils.bytes.utf8.encode("amm__"),
+      anchor.utils.bytes.utf8.encode("amm__"),
       baseMint.toBuffer(),
       quoteMint.toBuffer(),
     ],
-    programId
+    new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
   );
 };
 
@@ -104,7 +98,7 @@ export const getAmmLpMintAddr = (
   amm: PublicKey
 ): [PublicKey, number] => {
   return PublicKey.findProgramAddressSync(
-    [utils.bytes.utf8.encode("amm_lp_mint"), amm.toBuffer()],
+    [Buffer.from("amm_lp_mint"), amm.toBuffer()],
     programId
   );
 };

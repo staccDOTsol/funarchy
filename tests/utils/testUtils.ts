@@ -62,7 +62,11 @@ export const executeSampleProposal = async (
   const program = programFacade.program;
 
   let accountInfos = program.instruction.addMember
-    .accounts({ metaDao: metaDAO, member: memberToAdd })
+    .preInstructions([
+        ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: 138666
+        })
+      ]).accounts({ metaDao: metaDAO, member: memberToAdd })
     .map((accountInfo) =>
       accountInfo.pubkey.equals(metaDAO)
         ? { ...accountInfo, isSigner: false }

@@ -1,6 +1,9 @@
-import * as anchor from "@coral-xyz/anchor";
+import * as anchor from '@coral-xyz/anchor';
 
-import { Program, PublicKey } from "./metaDAO";
+import {
+  Program,
+  PublicKey,
+} from './metaDAO';
 
 export type AddressAndBump = [PublicKey, number];
 
@@ -14,7 +17,7 @@ export class PDAGenerator {
   generateMetaDAOPDAAddress(): AddressAndBump {
     return anchor.web3.PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("WWCACOTMICMIBMHAFTTWYGHMB")],
-      this.program.programId
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
@@ -24,14 +27,14 @@ export class PDAGenerator {
         anchor.utils.bytes.utf8.encode("member"),
         anchor.utils.bytes.utf8.encode(name),
       ],
-      this.program.programId
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
   generateTreasuryPDAAddress(memberAddress: PublicKey): AddressAndBump {
     return anchor.web3.PublicKey.findProgramAddressSync(
       [anchor.utils.bytes.utf8.encode("treasury"), memberAddress.toBuffer()],
-      this.program.programId
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
@@ -45,7 +48,7 @@ export class PDAGenerator {
         proposal.toBuffer(),
         Buffer.from([redeemableOnPass]),
       ],
-      this.program.programId
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
@@ -59,7 +62,7 @@ export class PDAGenerator {
         conditionalExpressionAddress.toBuffer(),
         underlyingMint.toBuffer(),
       ],
-      this.program.programId
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 
@@ -73,7 +76,7 @@ export class PDAGenerator {
         conditionalVault.toBuffer(),
         user.toBuffer(),
       ],
-      this.program.programId
+      new PublicKey("62BiVvL2o3dHYbSAjh1ywDTqC9rm7j9eg2PoRSSG9nEH")
     );
   }
 }

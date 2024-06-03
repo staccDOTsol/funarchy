@@ -1,25 +1,21 @@
 use anchor_lang::prelude::*;
 use anchor_spl::associated_token::AssociatedToken;
 use anchor_spl::token::*;
-
+use anchor_spl::metadata::{
+    create_metadata_accounts_v3, mpl_token_metadata::types::DataV2, CreateMetadataAccountsV3,
+    Metadata
+};
 use crate::error::AmmError;
 use crate::state::*;
 
-#[derive(AnchorSerialize, AnchorDeserialize)]
-pub struct CreateAmmArgs {
-    pub twap_initial_observation: u128,
-    pub twap_max_observation_change_per_update: u128,
-}
-
 #[derive(Accounts)]
-#[instruction(args: CreateAmmArgs)]
 pub struct CreateAmm<'info> {
     #[account(mut)]
     pub user: Signer<'info>,
     #[account(
         init,
         payer = user,
-        space = 8 + std::mem::size_of::<Amm>(),
+        space = 8 + 144,
         seeds = [
             AMM_SEED_PREFIX,
             base_mint.key().as_ref(),
@@ -27,17 +23,12 @@ pub struct CreateAmm<'info> {
         ],
         bump
     )]
-    pub amm: Account<'info, Amm>,
-    #[account(
-        init,
-        payer = user,
-        seeds = [AMM_LP_MINT_SEED_PREFIX, amm.key().as_ref()],
-        bump,
-        mint::authority = amm,
-        mint::freeze_authority = amm,
-        mint::decimals = 9,
+    pub amm: AccountLoader<'info, Amm>,
+    #[account(mut,
+    mint::authority = amm,
+    mint::freeze_authority = amm,
+    mint::decimals = 6,
     )]
-    pub lp_mint: Box<Account<'info, Mint>>,
     pub base_mint: Box<Account<'info, Mint>>,
     pub quote_mint: Box<Account<'info, Mint>>,
     #[account(
@@ -57,6 +48,11 @@ pub struct CreateAmm<'info> {
     pub associated_token_program: Program<'info, AssociatedToken>,
     pub token_program: Program<'info, Token>,
     pub system_program: Program<'info, System>,
+    /// CHECK: verified via cpi into token metadata
+    #[account(mut)]
+    pub base_token_metadata: AccountInfo<'info>,
+    pub metadata_program: Program<'info, Metadata>,
+    pub rent: Sysvar<'info, Rent>,
 }
 
 impl CreateAmm<'_> {
@@ -67,52 +63,81 @@ impl CreateAmm<'_> {
             AmmError::SameTokenMints
         );
 
+        require_eq!(self.base_mint.supply, 0, AmmError::InvalidSupply);
+
         Ok(())
     }
 
-    pub fn handle(ctx: Context<Self>, args: CreateAmmArgs) -> Result<()> {
+    pub fn handle(ctx: Context<Self>, pof: String, uri: String, proposal_number: u16, osymbol: String, _: u8) -> Result<()> {
         let CreateAmm {
-            user: _,
-            amm,
-            lp_mint,
+            user,
+            amm: _,
             base_mint,
             quote_mint,
-            vault_ata_base: _,
-            vault_ata_quote: _,
-            associated_token_program: _,
-            token_program: _,
-            system_program: _,
+            base_token_metadata,
+            ..
         } = ctx.accounts;
-
         let current_slot = Clock::get()?.slot;
 
-        let CreateAmmArgs {
-            twap_initial_observation,
-            twap_max_observation_change_per_update,
-        } = args;
+        // there are null bytes we must trim from string, otherwise string value is longer than we want
+        let quote_token_symbol_raw = osymbol.clone();
+        let quote_token_symbol = quote_token_symbol_raw.trim_matches(char::from(0));
 
-        amm.set_inner(Amm {
-            bump: ctx.bumps.amm,
+        let base_symbol = format!("{}{}", pof, quote_token_symbol);
+       
 
-            created_at_slot: current_slot,
+        let signer_seeds: &[&[u8]; 4] = &[
+            AMM_SEED_PREFIX,
+            base_mint.to_account_info().key.as_ref(),
+            quote_mint.to_account_info().key.as_ref(),
+            &[ctx.bumps.amm],
+        ];
+            
+            let cpi_program = ctx.accounts.metadata_program.to_account_info();
 
-            lp_mint: lp_mint.key(),
-            base_mint: base_mint.key(),
-            quote_mint: quote_mint.key(),
+            let cpi_accounts = CreateMetadataAccountsV3 {
+                metadata: base_token_metadata.to_account_info(),
+                mint: base_mint.to_account_info(),
+                mint_authority: ctx.accounts.amm.to_account_info(),
+                payer: user.to_account_info(),
+                update_authority: ctx.accounts.amm.to_account_info(),
+                system_program: ctx.accounts.system_program.to_account_info(),
+                rent: ctx.accounts.rent.to_account_info(),
+            };
 
-            base_mint_decimals: base_mint.decimals,
-            quote_mint_decimals: quote_mint.decimals,
+            create_metadata_accounts_v3(
+                CpiContext::new_with_signer(cpi_program, cpi_accounts, &[signer_seeds]),
+                DataV2 {
+                    name: format!("Proposal {}: {}", proposal_number, base_symbol),
+                    symbol: base_symbol,
+                    uri: uri.to_string(),
+                    seller_fee_basis_points: 0,
+                    creators: None,
+                    collection: None,
+                    uses: None,
+                },
+                false,
+                true,
+                None,
+            )?;
+        
+        let amm = &mut ctx.accounts.amm.load_init()?;
 
-            base_amount: 0,
-            quote_amount: 0,
+        amm.bump = ctx.bumps.amm;
 
-            oracle: TwapOracle::new(
-                current_slot,
-                twap_initial_observation,
-                twap_max_observation_change_per_update,
-            ),
-        });
+        amm.created_at_slot = current_slot;
+
+        amm.base_mint = base_mint.key();
+        amm.quote_mint = quote_mint.key();
+
+        amm.base_mint_decimals = base_mint.decimals;
+        amm.quote_mint_decimals = quote_mint.decimals;
+
+        amm.v_base_reserves = (1_000_000_000_u128 * 10_u128.pow(base_mint.decimals as u32)) as u64;
+        amm.v_quote_reserves = (10_u128 * 10_u128.pow(quote_mint.decimals as u32)) as u64;
+      amm.vault_status = 0;
 
         Ok(())
     }
 }
+

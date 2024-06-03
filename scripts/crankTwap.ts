@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { AmmClient, AutocratClient } from "@metadaoproject/futarchy";
+import { AmmClient, AutocratClient } from "../sdk/dist";
 import * as token from "@solana/spl-token";
 import { PublicKey } from "@solana/web3.js";
 
