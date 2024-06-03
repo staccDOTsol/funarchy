@@ -1,21 +1,13 @@
 // @ts-nocheck
 
-import BN from 'bn.js';
-import fs from 'fs';
+import BN from "bn.js";
+import fs from "fs";
 
 // @ts-nocheck
-import {
-  AnchorProvider,
-  Program,
-  utils,
-} from '@coral-xyz/anchor';
-import {
-  MethodsBuilder,
-} from '@coral-xyz/anchor/dist/cjs/program/namespace/methods';
-import {
-  MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID,
-} from '@metaplex-foundation/mpl-token-metadata';
-import { toWeb3JsPublicKey } from '@metaplex-foundation/umi-web3js-adapters';
+import { AnchorProvider, Program, utils } from "@coral-xyz/anchor";
+import { MethodsBuilder } from "@coral-xyz/anchor/dist/cjs/program/namespace/methods";
+import { MPL_TOKEN_METADATA_PROGRAM_ID as UMI_MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
+import { toWeb3JsPublicKey } from "@metaplex-foundation/umi-web3js-adapters";
 import {
   ASSOCIATED_TOKEN_PROGRAM_ID,
   createAssociatedTokenAccountIdempotentInstruction,
@@ -27,7 +19,7 @@ import {
   TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
   unpackMint,
-} from '@solana/spl-token';
+} from "@solana/spl-token";
 import {
   AddressLookupTableAccount,
   ComputeBudgetProgram,
@@ -40,12 +32,12 @@ import {
   SystemProgram,
   SYSVAR_RENT_PUBKEY,
   Transaction,
-} from '@solana/web3.js';
+} from "@solana/web3.js";
 
-import { AMM_PROGRAM_ID } from './constants';
-import { AmmAccount } from './types/';
-import { Amm as AmmIDLType } from './types/amm';
-import { PriceMath } from './utils/priceMath';
+import { AMM_PROGRAM_ID } from "./constants";
+import { AmmAccount } from "./types/";
+import { Amm as AmmIDLType } from "./types/amm";
+import { PriceMath } from "./utils/priceMath";
 
 export async function createMint(
   connection: Connection,
@@ -186,9 +178,10 @@ export class AmmClient {
     passOrFail: string,
     uri: string,
     proposal_number: number,
-    bata: PublicKey,
-    qata: PublicKey,
-    bump: number,
+    bata?: PublicKey,
+    qata?: PublicKey,
+    bump?: number,
+    preixs?: any[] = [],
     twapMaxObservationChangePerUpdate?: number
   ): Promise<PublicKey> {
     if (!twapMaxObservationChangePerUpdate) {
@@ -203,7 +196,8 @@ export class AmmClient {
         uri,
         proposal_number,
         "Manifesto",
-        bump
+        bump,
+        preixs
       )
     ).rpc({ skipPreflight: true });
     console.log("hm", hm);
@@ -216,6 +210,7 @@ export class AmmClient {
     proposal_number: number,
     symbol: string,
     bump: number,
+    preixs?: any[] = [],
     bata?: PublicKey,
     qata?: PublicKey,
     twapFirstObservationScaled?: BN,
@@ -237,18 +232,7 @@ export class AmmClient {
         ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: 66600,
         }),
-        createAssociatedTokenAccountInstruction(
-          this.provider.wallet.publicKey,
-          getAssociatedTokenAddressSync(baseMint, amm, true),
-          amm,
-          baseMint
-        ),
-        createAssociatedTokenAccountInstruction(
-          this.provider.wallet.publicKey,
-          getAssociatedTokenAddressSync(quoteMint, amm, true),
-          amm,
-          quoteMint
-        ),
+        ...preixs,
       ])
 
       .accounts({
@@ -295,7 +279,7 @@ export class AmmClient {
       swapType,
       inputAmountScaled,
       outputAmountMinScaled
-    ).rpc({skipPreflight: true});
+    ).rpc({ skipPreflight: true });
   }
 
   swapIx(

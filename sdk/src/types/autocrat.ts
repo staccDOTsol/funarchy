@@ -279,27 +279,11 @@ export type Autocrat = {
             type: "u8";
           },
           {
-            name: "baseAmount";
-            type: "u64";
-          },
-          {
-            name: "quoteAmount";
-            type: "u64";
-          },
-          {
             name: "vQuoteReserves";
             type: "u64";
           },
           {
             name: "vBaseReserves";
-            type: "u64";
-          },
-          {
-            name: "quoteReserves";
-            type: "u64";
-          },
-          {
-            name: "baseReserves";
             type: "u64";
           },
           {

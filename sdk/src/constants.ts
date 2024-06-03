@@ -1,4 +1,4 @@
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey } from "@solana/web3.js";
 
 export const AUTOCRAT_PROGRAM_ID = new PublicKey(
   "DyzquJrx55eW3wuVqqWM8jz7WTkwG2U77nZGYnLWucFz"
